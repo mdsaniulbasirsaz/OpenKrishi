@@ -1,0 +1,57 @@
+Test Skip for build gradle
+.\gradlew build -x test
+
+
+Folder Structure:
+openkrishi/
+├── src/
+│   └── main/
+│       ├── java/
+│       │   └── com/openkrishi/
+│       │       ├── OpenKrishiApplication.java       ← Main class
+│       │
+│       │       ├── config/                          ← App-level configs (Beans, Swagger, Security)
+│       │       │   ├── SecurityConfig.java
+│       │       │   └── SwaggerConfig.java
+│       │
+│       │       ├── common/                          ← Shared utilities
+│       │       │   ├── exception/
+│       │       │   ├── util/
+│       │       │   └── annotations/
+│       │
+│       │       ├── domain/                          ← DDD layer
+│       │       │   ├── farmer/
+│       │       │   │   ├── controller/
+│       │       │   │   ├── service/
+│       │       │   │   │   └── impl/
+│       │       │   │   ├── repository/
+│       │       │   │   ├── entity/
+│       │       │   │   └── dto/
+│       │       │   ├── ngo/
+│       │       │   │   ├── controller/
+│       │       │   │   ├── service/
+│       │       │   │   │   └── impl/
+│       │       │   │   ├── repository/
+│       │       │   │   ├── entity/
+│       │       │   │   └── dto/
+│       │       │   ├── customer/
+│       │       │   │   └── (same structure)
+│       │       │   └── admin/
+│       │       │       └── (same structure)
+│       │
+│       │       ├── ai/                               ← AI logic
+│       │       │   ├── forecast/
+│       │       │   └── recommendation/
+│       │
+│       │       ├── geo/                              ← Geolocation services
+│       │       │   ├── service/
+│       │       │   └── util/
+│       │
+│       │       └── scheduler/                        ← Weekly order cron jobs, etc.
+│
+│       └── resources/
+│           ├── application.properties
+│           ├── static/
+│           └── templates/
+│
+└── pom.xml
