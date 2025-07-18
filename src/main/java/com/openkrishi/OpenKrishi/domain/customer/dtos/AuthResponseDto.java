@@ -1,10 +1,17 @@
 package com.openkrishi.OpenKrishi.domain.customer.dtos;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 
 @Data
-@AllArgsConstructor
+
 public class AuthResponseDto {
+
+
+    public AuthResponseDto(String token, String fullName, String email)
+    {
+        this.token = token;
+        this.fullName = fullName;
+        this.email = email;
+    }
 
     public String getToken() {
         return token;

@@ -86,6 +86,14 @@ public class Customer {
     private Double latitude;
     private Double longitude;
 
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
     private LocalDateTime createdAt;
 
     @PrePersist
@@ -93,5 +101,6 @@ public class Customer {
     {
         createdAt = LocalDateTime.now();
     }
+
 
 }

@@ -3,7 +3,9 @@ package com.openkrishi.OpenKrishi.domain.customer.services;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerRegisterDto;
+import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerProfileDto;
 import com.openkrishi.OpenKrishi.domain.customer.entity.Customer;
+import com.openkrishi.OpenKrishi.domain.customer.mapper.CustomerProfileMapper;
 import com.openkrishi.OpenKrishi.domain.customer.repository.CustomerRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -42,5 +44,11 @@ public class CustomerAuthService {
             throw new RuntimeException("Invalid credentials");
         }
         return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName());
+    }
+
+    public CustomerProfileDto getProfileByEmail(String email) {
+        Customer customer = customerRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("Customer with email '" + email + "' not found"));
+        return CustomerProfileMapper.toDto(customer);
     }
 } 

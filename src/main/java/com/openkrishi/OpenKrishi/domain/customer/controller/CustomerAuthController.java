@@ -3,17 +3,21 @@ package com.openkrishi.OpenKrishi.domain.customer.controller;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerRegisterDto;
+import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerProfileDto;
 import com.openkrishi.OpenKrishi.domain.customer.services.CustomerAuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.core.Authentication;
 
 @RestController
 @RequestMapping("v1/api/customer/auth")
 public class CustomerAuthController {
     private final CustomerAuthService authService;
 
-    public CustomerAuthController(CustomerAuthService authService) {
+
+    public CustomerAuthController(CustomerAuthService authService)
+    {
         this.authService = authService;
     }
 
@@ -30,5 +34,12 @@ public class CustomerAuthController {
         
         AuthResponseDto response = authService.login(loginDto);
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/profile")
+    public ResponseEntity<CustomerProfileDto> getProfile(Authentication authentication) {
+        String email = authentication.getName();
+        CustomerProfileDto profile = authService.getProfileByEmail(email);
+        return ResponseEntity.ok(profile);
     }
 } 
