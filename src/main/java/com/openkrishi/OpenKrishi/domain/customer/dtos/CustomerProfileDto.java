@@ -2,6 +2,7 @@ package com.openkrishi.OpenKrishi.domain.customer.dtos;
 
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 public class CustomerProfileDto {
 
@@ -62,6 +63,16 @@ public class CustomerProfileDto {
    private String email;
 
    private String phone;
+
+    public UUID getSubscriptionId() {
+        return subscriptionId;
+    }
+
+    public void setSubscriptionId(UUID subscriptionId) {
+        this.subscriptionId = subscriptionId;
+    }
+
+    private UUID subscriptionId;
 
    private Double latitude;
    private Double longitude;

@@ -2,19 +2,21 @@ package com.openkrishi.OpenKrishi.domain.customer.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
-import java.time.LocalDateTime;
+import org.hibernate.annotations.UuidGenerator;
 
+import java.time.LocalDateTime;
+import java.util.UUID;
 
 @Entity
-@Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-
 public class Customer {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @UuidGenerator
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
 
     @Column(nullable = false)
     private String fullName;
@@ -26,6 +28,55 @@ public class Customer {
     private String password;
 
     private String phone;
+
+    @Column(name = "subscription_id", nullable = false, unique = true)
+    private UUID subscriptionId;
+
+    private Double latitude;
+
+    private Double longitude;
+
+    private LocalDateTime createdAt;
+
+    @PrePersist
+    public void onCreate() {
+        createdAt = LocalDateTime.now();
+        if (subscriptionId == null) {
+            subscriptionId = UUID.randomUUID();
+        }
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public void setFullName(String fullName) {
+        this.fullName = fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
 
     public Double getLatitude() {
         return latitude;
@@ -43,49 +94,6 @@ public class Customer {
         this.longitude = longitude;
     }
 
-    public String getPhone() {
-        return phone;
-    }
-
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getFullName() {
-        return fullName;
-    }
-
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    private Double latitude;
-    private Double longitude;
-
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -93,14 +101,4 @@ public class Customer {
     public void setCreatedAt(LocalDateTime createdAt) {
         this.createdAt = createdAt;
     }
-
-    private LocalDateTime createdAt;
-
-    @PrePersist
-    public void onCreate()
-    {
-        createdAt = LocalDateTime.now();
-    }
-
-
 }
