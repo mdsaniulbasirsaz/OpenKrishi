@@ -1,5 +1,7 @@
 package com.openkrishi.OpenKrishi.domain.customer.services;
 
+import com.openkrishi.OpenKrishi.domain.auth.LoginServices.LoginService;
+import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerRegisterDto;
@@ -15,11 +17,14 @@ public class CustomerAuthService {
     private final CustomerRepository customerRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final LoginService loginService;
 
-    public CustomerAuthService(CustomerRepository customerRepository, PasswordEncoder passwordEncoder, JwtService jwtService) {
+
+    public CustomerAuthService(CustomerRepository customerRepository, PasswordEncoder passwordEncoder, JwtService jwtService, LoginService loginService) {
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
+        this.loginService = loginService;
     }
 
     public AuthResponseDto register(CustomerRegisterDto registerDto) {
@@ -37,13 +42,11 @@ public class CustomerAuthService {
         return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName());
     }
 
+
+
+    // Re-added login() method, using your external login class
     public AuthResponseDto login(CustomerLoginDto loginDto) {
-        Customer customer = customerRepository.findByEmail(loginDto.getEmail())
-                .orElseThrow(() -> new RuntimeException("Invalid credentials"));
-        if (!passwordEncoder.matches(loginDto.getPassword(), customer.getPassword())) {
-            throw new RuntimeException("Invalid credentials");
-        }
-        return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName());
+        return loginService.login(loginDto); // delegate to your login class
     }
 
     public CustomerProfileDto getProfileByEmail(String email) {

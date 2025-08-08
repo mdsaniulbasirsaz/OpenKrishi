@@ -1,4 +1,4 @@
-package com.openkrishi.OpenKrishi.domain.customer.services;
+package com.openkrishi.OpenKrishi.domain.auth.jwtServices;
 
 import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
 import io.github.cdimascio.dotenv.Dotenv;

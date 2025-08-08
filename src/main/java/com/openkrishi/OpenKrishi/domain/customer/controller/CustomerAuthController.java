@@ -11,12 +11,12 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 @RestController
-@RequestMapping("v1/api/customer")
-public class CustomerController {
+@RequestMapping("v1/api/customer/auth")
+public class CustomerAuthController {
     private final CustomerAuthService authService;
 
 
-    public CustomerController(CustomerAuthService authService)
+    public CustomerAuthController(CustomerAuthService authService)
     {
         this.authService = authService;
     }

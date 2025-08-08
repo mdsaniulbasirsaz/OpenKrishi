@@ -1,6 +1,6 @@
 package com.openkrishi.OpenKrishi.config;
 
-import com.openkrishi.OpenKrishi.domain.customer.services.JwtAuthenticationFilter;
+import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;

@@ -1,4 +1,4 @@
-package com.openkrishi.OpenKrishi.domain.customer.services;
+package com.openkrishi.OpenKrishi.domain.auth.jwtServices;
 
 import com.openkrishi.OpenKrishi.domain.customer.repository.CustomerRepository;
 import io.jsonwebtoken.JwtException;
