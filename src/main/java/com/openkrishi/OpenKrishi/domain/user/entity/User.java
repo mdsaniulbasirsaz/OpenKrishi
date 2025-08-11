@@ -1,0 +1,84 @@
+package com.openkrishi.OpenKrishi.domain.user.entity;
+
+import jakarta.persistence.*;
+import jakarta.validation.constraints.Null;
+import lombok.Getter;
+import lombok.Setter;
+import org.hibernate.annotations.UuidGenerator;
+
+import java.time.LocalDateTime;
+import java.util.Random;
+import java.util.UUID;
+
+@Entity
+@Table(name = "users")
+public class User {
+    @Id
+    @UuidGenerator
+    @Getter
+    @Column(name = "id", updatable = false, nullable = false)
+    private UUID id;
+
+    @Setter
+    @Getter
+    @Column(nullable = false)
+
+    private String fullName;
+
+    @Setter
+    @Getter
+    @Column(nullable = false, unique = true)
+    private String email;
+
+    @Setter
+    @Getter
+    @Column(nullable = false)
+    private String password;
+
+    @Setter
+    @Getter
+    private String phone;
+
+    @Setter
+    @Getter
+    private Double latitude;
+
+    @Setter
+    @Getter
+    private Double longitude;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    @Setter
+    @Getter
+    private Role role;
+
+    @Getter
+    private LocalDateTime createdAt;
+
+    @Getter
+    private LocalDateTime updatedAt;
+
+    @PrePersist
+    public void onCreate() {
+        LocalDateTime now  = LocalDateTime.now();
+        createdAt = now;
+        updatedAt = now;
+
+        if(this.id == null){
+            this.id = UUID.fromString(generateCustomId());
+        }
+    }
+
+    private String generateCustomId() {
+        Random random = new Random();
+        int number = 100000 + random.nextInt(900000);
+        return "OK-" + number;
+    }
+
+    public enum Role {
+        CUSTOMER,
+        NGO,
+        FARMER
+    }
+}
