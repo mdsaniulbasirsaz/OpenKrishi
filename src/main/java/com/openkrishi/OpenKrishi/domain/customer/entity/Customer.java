@@ -5,9 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 @Entity
 @NoArgsConstructor
@@ -42,8 +40,8 @@ public class Customer {
 
     @Builder.Default
     @Getter
-    @OneToMany(mappedBy = "customer", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Subscription> subscriptions = new ArrayList<>();
+    @ManyToMany(mappedBy = "customers")
+    private Set<Subscription> subscriptions = new HashSet<>();
 
     @Setter
     @Getter
