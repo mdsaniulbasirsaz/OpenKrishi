@@ -53,6 +53,14 @@ public class User {
     @Getter
     private Role role;
 
+    @Setter
+    @Getter
+    private boolean isDelete;
+
+    @Setter
+    @Getter
+    private Status status;
+
     @Getter
     private LocalDateTime createdAt;
 
@@ -64,6 +72,7 @@ public class User {
         LocalDateTime now  = LocalDateTime.now();
         createdAt = now;
         updatedAt = now;
+        isDelete = false;
 
         if(this.id == null){
             this.id = UUID.fromString(generateCustomId());
@@ -80,5 +89,10 @@ public class User {
         CUSTOMER,
         NGO,
         FARMER
+    }
+
+    public enum Status {
+        INACTIVE,
+        ACTIVE
     }
 }

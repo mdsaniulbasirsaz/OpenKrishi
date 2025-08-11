@@ -14,6 +14,5 @@ public class UserDto {
     private Double latitude;
     private Double longitude;
     private User.Role role;
-    private LocalDateTime createdAt;
-    private LocalDateTime updatedAt;
+    private User.Status status;
 }
