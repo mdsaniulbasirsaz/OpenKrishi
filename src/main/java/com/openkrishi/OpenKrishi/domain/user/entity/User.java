@@ -88,7 +88,8 @@ public class User {
     public enum Role {
         CUSTOMER,
         NGO,
-        FARMER
+        FARMER,
+        ADMIN
     }
 
     public enum Status {

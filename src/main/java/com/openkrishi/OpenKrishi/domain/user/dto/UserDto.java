@@ -13,6 +13,7 @@ public class UserDto {
     private String phone;
     private Double latitude;
     private Double longitude;
-    private User.Role role;
-    private User.Status status;
+    public User.Role role;
+    public User.Status status;
+    private String password;
 }
