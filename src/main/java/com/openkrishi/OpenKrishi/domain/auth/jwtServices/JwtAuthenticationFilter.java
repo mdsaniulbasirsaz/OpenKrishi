@@ -46,10 +46,27 @@ protected void doFilterInternal(HttpServletRequest request, HttpServletResponse 
         }
     }
     if (email != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-        var customerOpt = customerRepository.findByEmail(email);
-        if (customerOpt.isPresent() && jwtService.validateToken(token)) {
+//        var customerOpt = customerRepository.findByEmail(email);
+
+        var userOpt = customerRepository.findByEmail(email)
+                .map(user -> (UserDetails) User.withUsername(user.getEmail())
+                        .password(user.getPassword())
+                        .authorities(Collections.emptyList())
+                        .build());
+//                .or(() -> ngoRepository.findByEmail(email)
+//                        .map(user -> (UserDetails) User.withUsername(user.getEmail())
+//                                .password(user.getPassword())
+//                                .authorities(Collections.emptyList())
+//                                .build()))
+//                .or(() -> farmerRepository.findByEmail(email)
+//                        .map(user -> (UserDetails) User.withUsername(user.getEmail())
+//                                .password(user.getPassword())
+//                                .authorities(Collections.emptyList())
+//                                .build()));
+
+        if (userOpt.isPresent() && jwtService.validateToken(token)) {
             UserDetails userDetails = User.withUsername(email)
-                    .password(customerOpt.get().getPassword())
+                    .password(userOpt.get().getPassword())
                     .authorities(Collections.emptyList())
                     .build();
             UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(

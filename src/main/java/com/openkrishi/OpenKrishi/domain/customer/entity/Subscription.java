@@ -5,6 +5,8 @@ import lombok.*;
 import org.hibernate.annotations.UuidGenerator;
 
 import java.time.LocalDateTime;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.UUID;
 
 
@@ -47,12 +49,18 @@ public class Subscription {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "customer_id", nullable = true)
-    private Customer customer;
 
     @Column(name="created_by_email", nullable = false, updatable = false)
     private String createdByEmail;
+
+    @Builder.Default
+    @ManyToMany
+    @JoinTable(
+            name = "subscription_customer",
+            joinColumns = @JoinColumn(name = "subscription_id"),
+            inverseJoinColumns = @JoinColumn(name = "customer_id")
+    )
+    private Set<Customer> customers = new HashSet<>();
 
     @PrePersist
     public void prePersist() {

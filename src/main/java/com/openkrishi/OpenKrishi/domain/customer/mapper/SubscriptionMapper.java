@@ -5,6 +5,8 @@ import com.openkrishi.OpenKrishi.domain.customer.entity.Customer;
 import com.openkrishi.OpenKrishi.domain.customer.entity.Subscription;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
+
 @Component
 public class SubscriptionMapper {
 
@@ -30,7 +32,6 @@ public class SubscriptionMapper {
                 .endDate(dto.getEndDate())
                 .ngoShare(dto.getNgoShare())
                 .createdByEmail(createdByEmail)
-                .customer(null)
                 .build();
     }
 }

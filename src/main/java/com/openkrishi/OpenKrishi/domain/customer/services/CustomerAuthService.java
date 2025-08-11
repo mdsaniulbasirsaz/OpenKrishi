@@ -44,9 +44,9 @@ public class CustomerAuthService {
 
 
 
-    // Re-added login() method, using your external login class
+    // Re-added login() method
     public AuthResponseDto login(CustomerLoginDto loginDto) {
-        return loginService.login(loginDto); // delegate to your login class
+        return loginService.login(loginDto);
     }
 
     public CustomerProfileDto getProfileByEmail(String email) {
