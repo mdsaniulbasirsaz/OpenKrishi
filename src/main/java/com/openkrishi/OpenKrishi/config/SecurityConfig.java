@@ -27,7 +27,8 @@ public class SecurityConfig {
                     "/v1/api/customer/auth/register",
                     "/v1/api/customer/auth/login",
                     "/v1/admin/profiles",
-                    "/v1/admin/success"
+                    "/v1/admin/success",
+                        "/v1/api/users/"
                 ).permitAll()
                 .anyRequest().authenticated()
             )
