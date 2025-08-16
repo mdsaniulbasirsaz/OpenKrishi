@@ -1,6 +1,7 @@
 package com.openkrishi.OpenKrishi.domain.auth.jwtServices;
 
-import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
+
+import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -8,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.Key;
 import java.util.Date;
+import java.util.UUID;
 
 @Service
 public class JwtService {
@@ -31,13 +33,14 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email, String fullName) {
+    public String generateToken(String email, String fullName, UUID userId ) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
         return Jwts.builder()
                 .setSubject(email)
                 .claim("fullName", fullName)
+                .claim("userId", userId.toString())
                 .setIssuedAt(now)
                 .setExpiration(expiryDate)
                 .signWith(key, SignatureAlgorithm.HS256)
@@ -63,9 +66,9 @@ public class JwtService {
         return claims.get("fullName", String.class);
     }
 
-    public AuthResponseDto buildAuthResponse(String email, String fullName) {
-        String token = generateToken(email, fullName);
-        return new AuthResponseDto(token, fullName, email);
+    public AuthResponseDto buildAuthResponse(String email, String fullName, UUID userId) {
+        String token = generateToken(email, fullName, userId);
+        return new AuthResponseDto(token, fullName, email, userId.toString());
     }
 
     private Claims extractAllClaims(String token) {

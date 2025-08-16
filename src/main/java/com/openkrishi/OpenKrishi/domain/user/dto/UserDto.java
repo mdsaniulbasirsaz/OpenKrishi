@@ -15,5 +15,6 @@ public class UserDto {
     private Double longitude;
     public User.Role role;
     public User.Status status;
+    public User.SubscriptionStatus subscriptionStatus;
     private String password;
 }

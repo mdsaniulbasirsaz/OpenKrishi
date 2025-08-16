@@ -1,14 +1,17 @@
 package com.openkrishi.OpenKrishi.domain.auth.LoginServices;
 
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
-import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.entity.Customer;
 import com.openkrishi.OpenKrishi.domain.customer.repository.CustomerRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
+import java.util.function.Function;
 
 @Service
 public class LoginService {
@@ -31,28 +34,25 @@ public class LoginService {
         String email = loginDto.getEmail();
         String rawPassword = loginDto.getPassword();
 
-        Optional<?> userOpt = customerRepository.findByEmail(email)
-                .map(user -> (Object) user);
-//                .or(() -> ngoRepository.findByEmail(email).map(user -> (Object) user))
-//                .or(() -> farmerRepository.findByEmail(email).map(user -> (Object) user));
 
-        if (userOpt.isEmpty()) {
+        Optional<Customer> customerOpt = customerRepository.findByEmail(email);
+
+        if (customerOpt.isEmpty()) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        Object user = userOpt.get();
+        Customer customer = customerOpt.get();
 
-        String storedPassword;
-        String fullName;
-
-        Customer customer = (Customer) user;
-        storedPassword = customer.getPassword();
-        fullName = customer.getFullName();
-
-        if (!passwordEncoder.matches(rawPassword, storedPassword)) {
+        // Check password
+        if (!passwordEncoder.matches(rawPassword, customer.getPassword())) {
             throw new RuntimeException("Invalid credentials");
         }
 
-        return jwtService.buildAuthResponse(email, fullName);
+        // Build response
+        return jwtService.buildAuthResponse(
+                customer.getEmail(),
+                customer.getFullName(),
+                customer.getId()
+        );
     }
 }

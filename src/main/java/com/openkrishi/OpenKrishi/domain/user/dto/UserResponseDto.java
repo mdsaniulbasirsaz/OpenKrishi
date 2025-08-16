@@ -16,6 +16,8 @@ public class UserResponseDto {
     private Double latitude;
     private Double longitude;
     private User.Role role;
+    private User.SubscriptionStatus subscriptionStatus;
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
+    private String token;
 }

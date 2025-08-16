@@ -59,7 +59,15 @@ public class User {
 
     @Setter
     @Getter
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
     private Status status;
+
+    @Getter
+    @Setter
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private SubscriptionStatus isSubscribed;
 
     @Getter
     private LocalDateTime createdAt;
@@ -73,6 +81,8 @@ public class User {
         createdAt = now;
         updatedAt = now;
         isDelete = false;
+        isSubscribed = SubscriptionStatus.NO;
+        status = Status.INACTIVE;
 
         if(this.id == null){
             this.id = UUID.fromString(generateCustomId());
@@ -95,5 +105,10 @@ public class User {
     public enum Status {
         INACTIVE,
         ACTIVE
+    }
+
+    public enum SubscriptionStatus {
+        NO,
+        YES
     }
 }

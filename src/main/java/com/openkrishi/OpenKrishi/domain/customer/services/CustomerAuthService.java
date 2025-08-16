@@ -2,7 +2,7 @@ package com.openkrishi.OpenKrishi.domain.customer.services;
 
 import com.openkrishi.OpenKrishi.domain.auth.LoginServices.LoginService;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
-import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerRegisterDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerProfileDto;
@@ -39,7 +39,7 @@ public class CustomerAuthService {
         customer.setLatitude(registerDto.getLatitude());
         customer.setLongitude(registerDto.getLongitude());
         customerRepository.save(customer);
-        return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName());
+        return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName(), customer.getId());
     }
 
 

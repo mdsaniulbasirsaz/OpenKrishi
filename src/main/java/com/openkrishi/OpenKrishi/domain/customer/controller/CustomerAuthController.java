@@ -1,6 +1,6 @@
 package com.openkrishi.OpenKrishi.domain.customer.controller;
 
-import com.openkrishi.OpenKrishi.domain.customer.dtos.AuthResponseDto;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerRegisterDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerProfileDto;
