@@ -1,5 +1,6 @@
 package com.openkrishi.OpenKrishi.domain.user.entity;
 
+import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Null;
 import lombok.Getter;
@@ -75,6 +76,14 @@ public class User {
     @Getter
     private LocalDateTime updatedAt;
 
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Ngo ngo;
+
+    @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    private Profile profile;
+
+
     @PrePersist
     public void onCreate() {
         LocalDateTime now  = LocalDateTime.now();
@@ -83,10 +92,6 @@ public class User {
         isDelete = false;
         isSubscribed = SubscriptionStatus.NO;
         status = Status.INACTIVE;
-
-        if(this.id == null){
-            this.id = UUID.fromString(generateCustomId());
-        }
     }
 
     private String generateCustomId() {

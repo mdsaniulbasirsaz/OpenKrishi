@@ -66,6 +66,16 @@ public class JwtService {
         return claims.get("fullName", String.class);
     }
 
+    public UUID extractUserId(String token) {
+        Claims claims = extractAllClaims(token);
+        String userIdStr = claims.get("userId", String.class);
+        if (userIdStr == null || userIdStr.isEmpty()) {
+            throw new IllegalArgumentException("User ID not present in token");
+        }
+        return UUID.fromString(userIdStr);
+    }
+
+
     public AuthResponseDto buildAuthResponse(String email, String fullName, UUID userId) {
         String token = generateToken(email, fullName, userId);
         return new AuthResponseDto(token, fullName, email, userId.toString());
