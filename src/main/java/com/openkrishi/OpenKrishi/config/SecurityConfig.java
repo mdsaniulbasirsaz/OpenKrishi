@@ -29,7 +29,8 @@ public class SecurityConfig {
                     "/v1/admin/profiles",
                     "/v1/admin/success",
                         "/v1/api/users/",
-                        "/api/ngos/update"
+                        "/api/ngos/update",
+                        "/v1/api/users/login"
                 ).permitAll()
                 .anyRequest().authenticated()
             )

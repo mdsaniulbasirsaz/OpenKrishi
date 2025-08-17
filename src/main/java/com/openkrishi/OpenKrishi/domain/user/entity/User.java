@@ -78,9 +78,13 @@ public class User {
 
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @Getter
+    @Setter
     private Ngo ngo;
 
     @OneToOne(mappedBy = "user", cascade = CascadeType.ALL)
+    @Getter
+    @Setter
     private Profile profile;
 
 

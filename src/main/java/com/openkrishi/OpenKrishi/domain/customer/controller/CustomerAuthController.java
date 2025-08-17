@@ -1,6 +1,7 @@
 package com.openkrishi.OpenKrishi.domain.customer.controller;
 
 import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.LoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerRegisterDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerProfileDto;
@@ -30,7 +31,7 @@ public class CustomerAuthController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody CustomerLoginDto loginDto) {
+    public ResponseEntity<AuthResponseDto> login(@Valid @RequestBody LoginDto loginDto) {
         
         AuthResponseDto response = authService.login(loginDto);
         return ResponseEntity.ok(response);

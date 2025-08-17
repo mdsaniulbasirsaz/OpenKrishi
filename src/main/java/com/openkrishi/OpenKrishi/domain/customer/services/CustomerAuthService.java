@@ -1,6 +1,7 @@
 package com.openkrishi.OpenKrishi.domain.customer.services;
 
 import com.openkrishi.OpenKrishi.domain.auth.LoginServices.LoginService;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.LoginDto;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.customer.dtos.CustomerLoginDto;
@@ -45,7 +46,7 @@ public class CustomerAuthService {
 
 
     // Re-added login() method
-    public AuthResponseDto login(CustomerLoginDto loginDto) {
+    public AuthResponseDto login(LoginDto loginDto) {
         return loginService.login(loginDto);
     }
 
