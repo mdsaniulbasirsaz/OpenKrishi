@@ -1,0 +1,73 @@
+package com.openkrishi.OpenKrishi.domain.farmer.services;
+
+
+import com.openkrishi.OpenKrishi.domain.farmer.dtos.FarmerCreateRequestDto;
+import com.openkrishi.OpenKrishi.domain.farmer.dtos.FarmerResponseDto;
+import com.openkrishi.OpenKrishi.domain.farmer.entity.Farmer;
+import com.openkrishi.OpenKrishi.domain.farmer.repostitory.FarmerRepository;
+import com.openkrishi.OpenKrishi.domain.ngo.entity.Member;
+import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.MemberRepository;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
+import org.springframework.stereotype.Service;
+
+import java.util.UUID;
+
+@Service
+public class FarmerService {
+
+
+    private final FarmerRepository farmerRepository;
+    private final MemberRepository memberRepository;
+    private final NgoRepository ngoRepository;
+
+
+    public FarmerService(
+            FarmerRepository farmerRepository,
+            MemberRepository memberRepository,
+            NgoRepository ngoRepository
+    ) {
+        this.farmerRepository = farmerRepository;
+        this.memberRepository = memberRepository;
+        this.ngoRepository = ngoRepository;
+    }
+
+    //---------------------Create Farmer---------------------
+    public FarmerResponseDto createFarmer(UUID userId, FarmerCreateRequestDto farmerCreateRequestDto)
+    {
+        // Find Member
+        Member member = memberRepository.findByUserId(userId)
+                .orElseThrow(() -> new RuntimeException("Member Not Found With Id " + userId));
+
+
+        // Find Ngo
+        Ngo ngo = member.getNgo();
+
+        //Create Farmer
+        Farmer farmer = new Farmer();
+        farmer.setFarmerName(farmerCreateRequestDto.getFarmerName());
+        farmer.setPhone(farmerCreateRequestDto.getPhone());
+        farmer.setLatitude(farmerCreateRequestDto.getLatitude());
+        farmer.setLongitude(farmerCreateRequestDto.getLongitude());
+        farmer.setCreatedBy(member);
+        farmer.setNgo(ngo);
+
+        Farmer savedFarmer =  farmerRepository.save(farmer);
+
+        return mapToDto(savedFarmer);
+    }
+    //---------------------DTO Mapping---------------------
+    private FarmerResponseDto mapToDto(Farmer farmer) {
+        FarmerResponseDto responseDto = new FarmerResponseDto();
+        responseDto.setId(farmer.getId());
+        responseDto.setFarmerName(farmer.getFarmerName());
+        responseDto.setPhone(farmer.getPhone());
+        responseDto.setLatitude(farmer.getLatitude());
+        responseDto.setLongitude(farmer.getLongitude());
+        responseDto.setCreatedByMemberId(farmer.getCreatedBy().getId());
+        responseDto.setCreatedByMemberName(farmer.getCreatedBy().getUser().getFullName());
+        responseDto.setNgoId(farmer.getNgo().getNgoId());
+        responseDto.setNgoManagerName(farmer.getNgo().getManagerName());
+        return responseDto;
+    }
+}

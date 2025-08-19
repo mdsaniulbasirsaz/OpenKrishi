@@ -13,6 +13,6 @@ public interface MemberRepository extends JpaRepository<Member, UUID> {
 
     // Fetch the member by email
     Optional<Member> findByUserEmail(String email);
-
+    Optional<Member> findByUserId(UUID userId);
 
 }
