@@ -40,7 +40,4 @@ public class Ngo {
     @JoinColumn(name = "address_id", nullable = true)
     @Setter @Getter
     private Address address;
-
-
-
 }

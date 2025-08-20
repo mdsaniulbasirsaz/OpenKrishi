@@ -106,20 +106,20 @@ public class NgoController {
     @Operation(
             summary = "Create a new member for NGO",
             description = """
-        This API endpoint allows the NGO owner to add a new member to their NGO. 
-
-        - **Authorization**: Requires a valid JWT Bearer token in the `Authorization` header.
-        - **NGO Identification**: The NGO is automatically determined based on the userId present in the JWT token.
-        - **Member Email**: The email of the user to be added as a member must be provided as a query parameter.
-        - **Member Designation**: The role/designation of the new member (e.g., VOLUNTEER, DELIVERY_AGENT, FARMER_MANAGER) should be provided in the request body.
-        - **Preconditions**:
-            - The NGO owner (from JWT) must have active status.
-            - The user being added must exist and should not already be a member of the NGO.
-        - **Responses**:
-            - `200 OK`: Member added successfully.
-            - `400 Bad Request`: Invalid input, user not found, or user already a member.
-            - `403 Forbidden`: JWT is invalid, missing, or the requester is not authorized.
-        """,
+            This API endpoint allows the NGO owner to add a new member to their NGO. 
+    
+            - **Authorization**: Requires a valid JWT Bearer token in the `Authorization` header.
+            - **NGO Identification**: The NGO is automatically determined based on the userId present in the JWT token.
+            - **Member Email**: The email of the user to be added as a member must be provided as a query parameter.
+            - **Member Designation**: The role/designation of the new member (e.g., VOLUNTEER, DELIVERY_AGENT, FARMER_MANAGER) should be provided in the request body.
+            - **Preconditions**:
+                - The NGO owner (from JWT) must have active status.
+                - The user being added must exist and should not already be a member of the NGO.
+            - **Responses**:
+                - `200 OK`: Member added successfully.
+                - `400 Bad Request`: Invalid input, user not found, or user already a member.
+                - `403 Forbidden`: JWT is invalid, missing, or the requester is not authorized.
+            """,
             responses = {
                     @ApiResponse(responseCode = "200", description = "Member Added Successfully"),
                     @ApiResponse(responseCode = "400", description = "Bad Request or Validation Failed",
