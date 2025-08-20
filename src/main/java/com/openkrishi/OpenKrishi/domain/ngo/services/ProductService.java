@@ -111,6 +111,16 @@ public class ProductService {
 
     }
 
+    //------------Product Search------------
+    public List<Product> searchProductsByKeyword(String keyword)
+    {
+        if(keyword == null || keyword.isEmpty())
+        {
+            return productRepository.findAll();
+        }
+        return productRepository.findByProductNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(keyword, keyword);
+    }
+
 
 
 }

@@ -361,5 +361,69 @@ public class ProductController {
     }
 
 
+    //--------------Product Search------------------
+    @Operation(
+            summary = "Search products by keyword",
+            description = """
+        This API allows users to `search` for `products` using a `keyword`.
+
+        **Requirements:**
+        - The user must be `authenticated` with a valid JWT token.
+
+        **Process:**
+        - Validate the `JWT` token and extract user ID.
+        - Search products where name or description contains the keyword (case-insensitive).
+
+        **Possible Errors:**
+        - `401` Unauthorized: JWT token invalid or missing.
+        - `400` Bad Request: Any other invalid request.
+        - `403` Forbidden: If the user does not have permission.
+        """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Products fetched successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad request or retrieval failed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<?> searchProducts(
+            @RequestHeader("Authorization") String token,
+            @RequestParam("keyword") String keyword
+    ) {
+        try {
+            String jwt = token.replace("Bearer ", "");
+            UUID userId = jwtService.extractUserId(jwt);
+
+            userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            List<ProductResponseDto> productResponse = productService.searchProductsByKeyword(keyword)
+                    .stream()
+                    .map(product -> new ProductResponseDto(
+                            product.getId(),
+                            product.getProductName(),
+                            product.getValue(),
+                            product.getUnit(),
+                            product.getSeason(),
+                            product.getDescription(),
+                            product.getLocalPrice(),
+                            product.getMarketPrice(),
+                            product.getDiscount(),
+                            product.getIsAvailable(),
+                            product.getProductImage(),
+                            product.getCategory() != null ? product.getCategory().getCategoryName() : null,
+                            product.getFarmer() != null ? product.getFarmer().getFarmerName() : null,
+                            product.getNgo() != null ? product.getNgo().getManagerName() : null
+                    ))
+                    .toList();
+
+            return ResponseEntity.ok(productResponse);
+
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error searching products: " + e.getMessage());
+        }
+    }
+
+
 
 }
