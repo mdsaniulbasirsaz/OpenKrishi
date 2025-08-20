@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -421,6 +422,69 @@ public class ProductController {
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error searching products: " + e.getMessage());
+        }
+    }
+
+
+    //-------------Update Product Availability--------------
+    @Operation(
+            summary = "Update product availability (available/unavailable)",
+            description = """
+        This API allows users to update the `availability` status of a product.
+
+        Requirements:
+        - The user must be authenticated with a valid JWT token.
+
+        Process:
+        - Validate the JWT token and extract user ID.
+        - Verify that the user exists in the system.
+        - Update the product availability based on the provided `isAvailable` parameter.
+
+        Parameters:
+        - `productId`: Unique identifier of the product.
+        - `isAvailable`: Boolean value (true/false) to set product availability.
+
+        Possible Errors:
+        - `401` Unauthorized: JWT token invalid or missing.
+        - `400` Bad Request: User not found or product not found.
+        - `403` Forbidden: If the user does not have permission.
+        - `500` Internal Server Error: Unexpected server error.
+        """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product availability updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad request or update failed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden: User does not have permission"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @PatchMapping("/{productId}/availability")
+    public ResponseEntity<Map<String, String>>updateProductAvailability(
+            @RequestHeader("Authorization") String token,
+            @PathVariable UUID productId,
+            @RequestParam boolean isAvailable
+    ) {
+        try{
+            UUID userId = jwtService.extractUserId(token.replace("Bearer ", ""));
+
+            userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User not found"));
+
+            productService.updateProductAvailability(productId,isAvailable);
+
+
+            return ResponseEntity.ok(Map.of(
+                    "Status","Success",
+                    "Message", isAvailable? "Product is Now Available." : "Product is Now Unavailable."
+            ));
+        }  catch (RuntimeException e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("Status", "Error", "Message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(500)
+                    .body(Map.of("Status", "Error", "Message", "Internal Server Error", "Details", e.getMessage()));
         }
     }
 

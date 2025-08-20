@@ -122,5 +122,17 @@ public class ProductService {
     }
 
 
+    // ---------------- Update Product Availability ----------------
+    public Product updateProductAvailability(UUID productId, boolean isAvailable)
+    {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product Not Found."));
+
+        // Set Availability
+        product.setIsAvailable(isAvailable);
+        return productRepository.save(product);
+    }
+
+
 
 }
