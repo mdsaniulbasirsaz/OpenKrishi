@@ -3,6 +3,7 @@ package com.openkrishi.OpenKrishi.domain.ngo.services;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductUpdateDto;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Product;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.ProductRepository;
 import org.springframework.stereotype.Service;
@@ -62,13 +63,52 @@ public class ProductService {
 
     // ---------------- Fetch Product by ID ----------------
     public Optional<Product> getProductById(UUID productId) {
+
         return productRepository.findById(productId);
     }
 
 
     // ---------------- Get All Products ----------------
     public List<Product> getAllProducts() {
+
         return productRepository.findAll();
+    }
+
+
+    //---------------Update Product----------------
+    public Product updateProduct(UUID productId, ProductUpdateDto productUpdateDto)
+    {
+        Product product = productRepository.findById(productId)
+                .orElseThrow(() -> new IllegalArgumentException("Product not Found."));
+
+        if(productUpdateDto.getDescription() !=null)
+        {
+            product.setDescription(productUpdateDto.getDescription());
+        }
+
+        if(productUpdateDto.getLocalPrice() !=null)
+        {
+            product.setLocalPrice(productUpdateDto.getLocalPrice());
+        }
+
+        if(productUpdateDto.getMarketPrice() !=null)
+        {
+            product.setMarketPrice(productUpdateDto.getMarketPrice());
+        }
+
+        if(productUpdateDto.getDiscount()  !=null)
+        {
+            product.setDiscount(productUpdateDto.getDiscount());
+        }
+
+        if(productUpdateDto.getValue() !=null)
+        {
+            product.setValue(productUpdateDto.getValue());
+        }
+
+        return productRepository.save(product);
+
+
     }
 
 

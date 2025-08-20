@@ -6,6 +6,7 @@ import com.openkrishi.OpenKrishi.domain.farmer.entity.Farmer;
 import com.openkrishi.OpenKrishi.domain.farmer.repostitory.FarmerRepository;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductCreateDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductResponseDto;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductUpdateDto;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Category;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Product;
@@ -295,6 +296,67 @@ public class ProductController {
 
         } catch (Exception e) {
             return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
+
+    // -------------Product Update By Id-------------------
+    @Operation(
+            summary = "Update product details",
+            description = """
+            This API is used to update an existing product by its ID.
+            
+            **Requirements:**
+            - The user must be authenticated with a valid **JWT token**.
+            - The product ID must exist in the database.
+            - Only specific fields can be updated:
+              - `description`
+              - `localPrice`
+              - `marketPrice`
+              - `discount`
+              - `value`
+            
+            **Process:**
+            - Validate the JWT token and extract the user ID.
+            - Ensure the user exists in the system.
+            - Find the product by ID.
+            - Update only the provided fields (others remain unchanged).
+            - Save the updated product in the database.
+            
+            **Possible Errors:**
+            - `401` Unauthorized: If JWT token is invalid or missing.
+            - `400` Bad Request: If product ID does not exist or payload is invalid.
+            - `403` Forbidden: If the user does not have permission.
+            """
+    )
+
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Product updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad request or update failed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+    })
+    @PutMapping("/update/{id}")
+    public ResponseEntity<?> updateProduct(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("id") UUID productId,
+            @RequestBody ProductUpdateDto productUpdateDto
+    ) {
+        try{
+            String jwt = token.replace("Bearer ","");
+            UUID userId = jwtService.extractUserId(jwt);
+
+
+            userRepository.findById(userId)
+                    .orElseThrow(() -> new RuntimeException("User Not Found."));
+
+            // Product Update
+            productService.updateProduct(productId, productUpdateDto);
+
+            return ResponseEntity.ok("Product Update SuccessFully.");
+
+        } catch (Exception e)
+        {
+            return ResponseEntity.badRequest().body("Error Updating Product: "+ e.getMessage());
         }
     }
 
