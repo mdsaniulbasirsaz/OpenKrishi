@@ -489,5 +489,84 @@ public class ProductController {
     }
 
 
+    // Product Search BY Price (using Min and Max Price)
+    @Operation(
+            summary = "Search products within a price range",
+            description = """
+        This API allows users to search for `products` within a given `minPrice` and `maxPrice`.
+
+        **Requirements:**
+        - The user must be `authenticated` with a valid JWT token.
+
+        **Process:**
+        - Validate the `JWT` token and extract user ID.
+        - Search for products where `localPrice` is between `minPrice` and `maxPrice`.
+
+        **Parameters:**
+        - `minPrice` (required): Minimum price filter.
+        - `maxPrice` (required): Maximum price filter.
+
+        **Possible Errors:**
+        - `401` Unauthorized: JWT token invalid or missing.
+        - `400` Bad Request: Invalid request or missing params.
+        - `500` Internal Server Error: Any unexpected error.
+        - `403` Forbidden: If the user does not have permission.
+        """
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Products fetched successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad request or invalid parameters"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden: User does not have permission"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+    @GetMapping("/search/by-price")
+    public ResponseEntity<?> searchProductsByPriceRange(
+            @RequestHeader("Authorization") String token,
+            @RequestParam double minPrice,
+            @RequestParam double maxPrice
+    ){
+        try {
+            UUID userId = jwtService.extractUserId(token.replace("Bearer ", ""));
+            userRepository.findById(userId).orElseThrow(() -> new RuntimeException("User not found"));
+
+
+            List<ProductResponseDto> productResponse = productService.searchProductByPriceRange(minPrice, maxPrice)
+                    .stream()
+                    .map(product -> new ProductResponseDto(
+                            product.getId(),
+                            product.getProductName(),
+                            product.getValue(),
+                            product.getUnit(),
+                            product.getSeason(),
+                            product.getDescription(),
+                            product.getLocalPrice(),
+                            product.getMarketPrice(),
+                            product.getDiscount(),
+                            product.getIsAvailable(),
+                            product.getProductImage(),
+                            product.getCategory() != null ? product.getCategory().getCategoryName() : null,
+                            product.getFarmer() != null ? product.getFarmer().getFarmerName() : null,
+                            product.getNgo() != null ? product.getNgo().getManagerName() : null
+                    ))
+                    .toList();
+
+            return ResponseEntity.ok(productResponse);
+
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "Status", "Error",
+                    "Message", e.getMessage()
+            ));
+        } catch (Exception e) {
+            return ResponseEntity.status(500).body(Map.of(
+                    "Status", "Error",
+                    "Message", "Internal Server Error",
+                    "Details", e.getMessage()
+            ));
+        }
+    }
+
+
 
 }

@@ -11,7 +11,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -123,14 +122,20 @@ public class ProductService {
 
 
     // ---------------- Update Product Availability ----------------
-    public Product updateProductAvailability(UUID productId, boolean isAvailable)
+    public void updateProductAvailability(UUID productId, boolean isAvailable)
     {
         Product product = productRepository.findById(productId)
                 .orElseThrow(() -> new IllegalArgumentException("Product Not Found."));
 
         // Set Availability
         product.setIsAvailable(isAvailable);
-        return productRepository.save(product);
+        productRepository.save(product);
+    }
+
+    //-------------Search Products by Price Range-----------------
+    public List<Product> searchProductByPriceRange(double minPrice, double maxPrice)
+    {
+        return productRepository.findByLocalPriceBetween(minPrice, maxPrice);
     }
 
 

@@ -12,4 +12,5 @@ public interface ProductRepository extends JpaRepository<Product, UUID> {
 
     // Search Products by keyword in name or description
     List<Product> findByProductNameContainingIgnoreCaseOrDescriptionContainingIgnoreCase(String nameKeyword, String descKeyword);
+    List<Product> findByLocalPriceBetween(double minPrice, double maxPrice);
 }
