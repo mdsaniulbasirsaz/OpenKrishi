@@ -9,5 +9,6 @@ public class EnvConfig {
         System.setProperty("spring.datasource.username", dotenv.get("DB_USERNAME"));
         System.setProperty("spring.datasource.password", dotenv.get("DB_PASSWORD"));
         System.setProperty("server.port", dotenv.get("PORT"));
+        System.setProperty("FRONTEND_URL", dotenv.get("FRONTEND_URL"));
     }
 } 
