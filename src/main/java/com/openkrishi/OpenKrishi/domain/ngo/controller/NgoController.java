@@ -1,13 +1,16 @@
 package com.openkrishi.OpenKrishi.domain.ngo.controller;
 
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.AddressUpdateRequestDto;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoCreateWithAddressDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoUpdateRequestDto;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Member;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
 import com.openkrishi.OpenKrishi.domain.ngo.services.MemberService;
 import com.openkrishi.OpenKrishi.domain.ngo.services.NgoService;
+import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -17,6 +20,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.Data;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -31,12 +35,85 @@ public class NgoController {
     private final NgoService ngoService;
     private final JwtService jwtService;
     private final MemberService memberService;
+    private final UserRepository userRepository;
 
-    public NgoController(NgoService ngoService, JwtService jwtService, MemberService memberService) {
+    public NgoController(NgoService ngoService, JwtService jwtService, UserRepository userRepository, MemberService memberService) {
         this.ngoService = ngoService;
         this.jwtService = jwtService;
         this.memberService = memberService;
+        this.userRepository = userRepository;
     }
+
+
+
+    //-----------Create NGO------------------
+    @Operation(
+            summary = "Register a new NGO",
+            description = "This API allows creating a new NGO along with its associated `User` and `Address`.\n" +
+                    "\nRequirements:\n" +
+                    "- Provide NGO information in JSON format.\n" +
+                    "- Provide a valid license file (MultipartFile).\n" +
+                    "\nProcess:\n" +
+                    "- Check if the email already exists.\n" +
+                    "- Upload the license file to Cloudinary.\n" +
+                    "- Create a `User` with role `NGO` and status `INACTIVE`.\n" +
+                    "- `NGO` entity and associate it with the `User`.\n" +
+                    "- Set the address\n" +
+                    "\nExample JSON for `info`:\n" +
+                    "```\n" +
+                    "{\n" +
+                    "  \"fullName\": \"John Doe NGO\",\n" +
+                    "  \"email\": \"john@example.com\",\n" +
+                    "  \"password\": \"securePass123\",\n" +
+                    "  \"phone\": \"0123456789\",\n" +
+                    "  \"managerName\": \"John Doe\",\n" +
+                    "  \"latitude\": 23.7808875,\n" +
+                    "  \"longitude\": 90.2792371,\n" +
+                    "  \"address\": {\n" +
+                    "    \"street\": \"Street 1\",\n" +
+                    "    \"houseNo\": \"12A\",\n" +
+                    "    \"city\": \"Dhaka\",\n" +
+                    "    \"state\": \"Dhaka\",\n" +
+                    "    \"postCode\": \"1207\",\n" +
+                    "    \"village\": \"Example Village\"\n" +
+                    "  }\n" +
+                    "}\n" +
+                    "```\n" +
+                    "\nPossible Errors:\n" +
+                    "- `400` Bad Request: Email already exists or invalid input.\n" +
+                    "- `500` Internal Server Error: Failure while saving data or uploading license."+
+                    "- `403` Forbidden."
+
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "NGO created successfully"),
+            @ApiResponse(responseCode = "400", description = "Bad request, e.g., email already exists"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "403", description = "Forbidden"),
+            @ApiResponse(responseCode = "500", description = "Internal server error during creation or file upload")
+    })
+    @PostMapping(value = "/register/ngo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<?> createNgo(
+            @RequestPart("licence") MultipartFile licenceFile,
+            @RequestPart("info") String infoJson
+    ) throws IOException {
+
+        // JSON parse
+        ObjectMapper mapper = new ObjectMapper();
+        NgoCreateWithAddressDto ngoCreateWithAddressDto = mapper.readValue(infoJson, NgoCreateWithAddressDto.class);
+
+        // Email check
+        if (userRepository.findByEmail(ngoCreateWithAddressDto.getEmail()).isPresent()) {
+            return ResponseEntity.badRequest().body("Email already exists.");
+        }
+
+        // Service call
+        ngoService.createNgoWithAddress(ngoCreateWithAddressDto, licenceFile);
+
+        return ResponseEntity.ok("Successfully Created.");
+    }
+
+
 
     @Operation(
             summary = "Update NGO details",
