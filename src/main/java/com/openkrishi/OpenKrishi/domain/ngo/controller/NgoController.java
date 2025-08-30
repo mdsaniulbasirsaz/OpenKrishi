@@ -2,14 +2,17 @@ package com.openkrishi.OpenKrishi.domain.ngo.controller;
 
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.ErrorResponseDto;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.AddressUpdateRequestDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoCreateWithAddressDto;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoResponseDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoUpdateRequestDto;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Member;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
 import com.openkrishi.OpenKrishi.domain.ngo.services.MemberService;
 import com.openkrishi.OpenKrishi.domain.ngo.services.NgoService;
+import com.openkrishi.OpenKrishi.domain.user.entity.User;
 import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -28,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -215,6 +219,55 @@ public class NgoController {
     @Data
     public static class MemberCreateRequest {
         private Member.MemberDesignation designation;
+    }
+
+    @GetMapping("/all/ngo")
+    @Operation(
+            summary = "Retrieve all registered NGOs",
+            description = "This API endpoint retrieves a complete list of all registered NGOs in the system along with their associated User and Address information.\n\n" +
+                    "Behavior:\n" +
+                    "1. The system fetches all Users with role `NGO`.\n" +
+                    "2. For each User, it retrieves the linked `Ngo` entity.\n" +
+                    "3. From the `Ngo` entity, the associated `Address` is fetched.\n" +
+                    "4. Only the following fields are returned for security and clarity:\n" +
+                    "   - User: `id`, `fullName`, `email`, `phone`, `latitude`, `longitude`\n" +
+                    "   - Ngo: `managerName`, `licenceUrl`\n" +
+                    "   - Address: `street`, `houseNo`, `city`, `state`, `postCode`, `village`\n\n" +
+                    "Error Handling:\n" +
+                    "- If an unexpected error occurs (e.g., database issue), the API returns HTTP status `500`.\n" +
+                    "- If the request is unauthorized, it returns `401 Unauthorized`.\n" +
+                    "- If the request is forbidden due to access control, it returns `403 Forbidden`.\n" +
+                    "- The response contains a structured JSON error object with fields:\n" +
+                    "   - `status`: HTTP status code\n" +
+                    "   - `message`: Description of the error\n" +
+                    "   - `error`: Exception class name\n" +
+                    "   - `timestamp`: Epoch time of the error\n\n" +
+                    "Notes:\n" +
+                    "- Passwords, roles, subscription status, and other sensitive user fields are excluded.\n" +
+                    "- The endpoint is read-only and does not modify any data."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Successfully retrieved all NGOs"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized access"),
+            @ApiResponse(responseCode = "403", description = "Forbidden: You do not have permission to access this resource"),
+            @ApiResponse(responseCode = "500", description = "Internal server error while fetching NGOs")
+    })
+    public ResponseEntity<?> getAllNgos()
+    {
+        try{
+            List<NgoResponseDto> ngos = ngoService.FindAllNgos();
+            return ResponseEntity.ok(ngos);
+        } catch (Exception e)
+        {
+            logger.error("Failed to Get All NGO: {}", e.getMessage(), e);
+            ErrorResponseDto error = new ErrorResponseDto(
+                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                    "Failed to fetch NGOs",
+                    e.getClass().getSimpleName(),
+                    System.currentTimeMillis()
+            );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+        }
     }
 
 }

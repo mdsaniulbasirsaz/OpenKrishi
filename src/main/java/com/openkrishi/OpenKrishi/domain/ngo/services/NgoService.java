@@ -4,6 +4,7 @@ import com.cloudinary.Cloudinary;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.AddressUpdateRequestDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoCreateWithAddressDto;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoResponseDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoUpdateRequestDto;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
@@ -16,8 +17,10 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -149,6 +152,37 @@ public class NgoService {
 
         }
         return userRepository.save(user);
+    }
+
+
+    // ---------------All Ngo List----------------
+    public List<NgoResponseDto> FindAllNgos(){
+        return userRepository.findAll()
+                .stream()
+                .filter(user -> user.getRole() == User.Role.NGO && user.getNgo() !=null)
+                .map(user -> {
+                    Ngo ngo = user.getNgo();
+                    Address address = ngo.getAddress();
+
+
+                    return new NgoResponseDto(
+                            user.getId(),
+                            user.getFullName(),
+                            user.getEmail(),
+                            user.getPhone(),
+                            user.getLatitude(),
+                            user.getLongitude(),
+                            ngo.getManagerName(),
+                            ngo.getLicenceUrl(),
+                            address.getStreet(),
+                            address.getHouseNo(),
+                            address.getCity(),
+                            address.getState(),
+                            address.getPostCode(),
+                            address.getVillage()
+                    );
+                })
+                .collect(Collectors.toList());
     }
 
 
