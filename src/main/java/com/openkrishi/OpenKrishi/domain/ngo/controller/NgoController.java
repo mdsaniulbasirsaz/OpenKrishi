@@ -19,6 +19,8 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.Data;
 import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -31,6 +33,9 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/api/ngos")
 public class NgoController {
+
+    private static final Logger logger = LoggerFactory.getLogger(NgoController.class);
+
 
     private final NgoService ngoService;
     private final JwtService jwtService;
@@ -49,41 +54,28 @@ public class NgoController {
     //-----------Create NGO------------------
     @Operation(
             summary = "Register a new NGO",
-            description = "This API allows creating a new NGO along with its associated `User` and `Address`.\n" +
-                    "\nRequirements:\n" +
-                    "- Provide NGO information in JSON format.\n" +
-                    "- Provide a valid license file (MultipartFile).\n" +
-                    "\nProcess:\n" +
-                    "- Check if the email already exists.\n" +
-                    "- Upload the license file to Cloudinary.\n" +
-                    "- Create a `User` with role `NGO` and status `INACTIVE`.\n" +
-                    "- `NGO` entity and associate it with the `User`.\n" +
-                    "- Set the address\n" +
-                    "\nExample JSON for `info`:\n" +
-                    "```\n" +
-                    "{\n" +
-                    "  \"fullName\": \"John Doe NGO\",\n" +
-                    "  \"email\": \"john@example.com\",\n" +
-                    "  \"password\": \"securePass123\",\n" +
-                    "  \"phone\": \"0123456789\",\n" +
-                    "  \"managerName\": \"John Doe\",\n" +
-                    "  \"latitude\": 23.7808875,\n" +
-                    "  \"longitude\": 90.2792371,\n" +
-                    "  \"address\": {\n" +
-                    "    \"street\": \"Street 1\",\n" +
-                    "    \"houseNo\": \"12A\",\n" +
-                    "    \"city\": \"Dhaka\",\n" +
-                    "    \"state\": \"Dhaka\",\n" +
-                    "    \"postCode\": \"1207\",\n" +
-                    "    \"village\": \"Example Village\"\n" +
-                    "  }\n" +
-                    "}\n" +
-                    "```\n" +
-                    "\nPossible Errors:\n" +
-                    "- `400` Bad Request: Email already exists or invalid input.\n" +
-                    "- `500` Internal Server Error: Failure while saving data or uploading license."+
-                    "- `403` Forbidden."
-
+            description = """
+        This API is used to register a new NGO with its associated `User` and `Address`.
+        
+        **Request Requirements:**
+        - Send NGO information in **JSON body** (not form-data).
+        - Include the license file as a **Base64 encoded string** in the field `licenceUrl`.
+        
+        **Process Flow:**
+        - Validate that the email does not already exist.
+        - Decode the Base64-encoded license file and upload it to Cloudinary (backend handles upload).
+        - Create a new `User` with:
+          - Role = `NGO`
+          - Status = `INACTIVE`
+        - Create and link the `NGO` entity to the `User`.
+        - Add and associate the `Address` information.
+        
+        **Possible Errors:**
+        - `400` Bad Request → Email already exists / Invalid input
+        - `401` Unauthorized
+        - `403` Forbidden
+        - `500` Internal Server Error → Failure in Cloudinary upload or database save
+        """
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "NGO created successfully"),
@@ -92,25 +84,23 @@ public class NgoController {
             @ApiResponse(responseCode = "403", description = "Forbidden"),
             @ApiResponse(responseCode = "500", description = "Internal server error during creation or file upload")
     })
-    @PostMapping(value = "/register/ngo", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PostMapping(value = "/register/ngo")
     public ResponseEntity<?> createNgo(
-            @RequestPart("licence") MultipartFile licenceFile,
-            @RequestPart("info") String infoJson
-    ) throws IOException {
+           @RequestBody NgoCreateWithAddressDto ngoCreateWithAddressDto
+    )  {
 
-        // JSON parse
-        ObjectMapper mapper = new ObjectMapper();
-        NgoCreateWithAddressDto ngoCreateWithAddressDto = mapper.readValue(infoJson, NgoCreateWithAddressDto.class);
+        try {
+            if (userRepository.findByEmail(ngoCreateWithAddressDto.getEmail()).isPresent()) {
+                return ResponseEntity.badRequest().body("Email already exists.");
+            }
 
-        // Email check
-        if (userRepository.findByEmail(ngoCreateWithAddressDto.getEmail()).isPresent()) {
-            return ResponseEntity.badRequest().body("Email already exists.");
+            ngoService.createNgoWithAddress(ngoCreateWithAddressDto);
+            return ResponseEntity.ok("Successfully Created.");
+        } catch (Exception e) {
+            logger.error("Failed to create NGO: {}", e.getMessage(), e);
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Failed to create NGO: " + e.getMessage());
         }
-
-        // Service call
-        ngoService.createNgoWithAddress(ngoCreateWithAddressDto, licenceFile);
-
-        return ResponseEntity.ok("Successfully Created.");
     }
 
 

@@ -16,6 +16,7 @@ public class NgoCreateWithAddressDto {
     private Double latitude;
     private Double longitude;
     private String managerName;
+    private String licenceUrl;
 
     private AddressUpdateRequestDto address;
 }

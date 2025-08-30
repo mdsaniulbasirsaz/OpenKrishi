@@ -15,6 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
@@ -102,8 +103,7 @@ public class NgoService {
 
     //--------------Ngo Create With Address------------
     public User createNgoWithAddress(
-            NgoCreateWithAddressDto ngoCreateWithAddressDto,
-            MultipartFile licenceFile
+            NgoCreateWithAddressDto ngoCreateWithAddressDto
     ) throws IOException{
         User user = new User();
         user.setFullName(ngoCreateWithAddressDto.getFullName());
@@ -122,16 +122,16 @@ public class NgoService {
         user.setNgo(ngo);
 
 
-        if(licenceFile !=null && !licenceFile.isEmpty())
+        if(ngoCreateWithAddressDto.getLicenceUrl() !=null && !ngoCreateWithAddressDto.getLicenceUrl().isEmpty())
         {
-            Map uploadResult = cloudinary.uploader().upload(
-                    licenceFile.getBytes(),
+            String base64Data = ngoCreateWithAddressDto.getLicenceUrl().split(",")[1];
+            byte[] fileBytes = Base64.getDecoder().decode(base64Data);
+
+            Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                    fileBytes,
                     Map.of("resource_type", "raw", "folder", "ngo_licences")
             );
-
-            String licenceUrl = (String) uploadResult.get("secure_url");
-
-            ngo.setLicenceUrl(licenceUrl);
+            ngo.setLicenceUrl((String) uploadResult.get("secure_url"));
         }
 
         if (ngoCreateWithAddressDto.getAddress() !=null)
