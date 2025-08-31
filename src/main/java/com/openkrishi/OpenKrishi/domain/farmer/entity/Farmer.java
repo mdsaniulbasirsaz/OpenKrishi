@@ -42,13 +42,6 @@ public class Farmer {
     private Double longitude;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "created_by", nullable = false)
-    @Getter
-    @Setter
-    private Member createdBy;
-
-
-    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ngo_id",nullable = false)
     @Getter
     @Setter

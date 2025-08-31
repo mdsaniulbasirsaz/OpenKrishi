@@ -1,4 +1,4 @@
-package com.openkrishi.OpenKrishi.domain.farmer.dtos;
+package com.openkrishi.OpenKrishi.domain.ngo.dtos;
 
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Member;
 import lombok.Data;
@@ -10,12 +10,12 @@ import java.util.UUID;
 @Data
 @Getter
 @Setter
-public class FarmerResponseDto {
+public class MemberResponseDto {
     private UUID id;
-    private String farmerName;
+    private String name;
     private String phone;
-    private Double latitude;
-    private Double longitude;
+    private String address;
+    private String image;
     private Member.MemberDesignation memberDesignation;
     private UUID ngoId;
 }

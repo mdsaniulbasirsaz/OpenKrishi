@@ -2,11 +2,10 @@ package com.openkrishi.OpenKrishi.domain.ngo.services;
 
 import com.cloudinary.Cloudinary;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.AddressUpdateRequestDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoCreateWithAddressDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoResponseDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoUpdateRequestDto;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.*;
+import com.openkrishi.OpenKrishi.domain.ngo.entity.Member;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.MemberRepository;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
 import com.openkrishi.OpenKrishi.domain.user.entity.Address;
 import com.openkrishi.OpenKrishi.domain.user.entity.User;
@@ -31,14 +30,16 @@ public class NgoService {
     private final UserRepository userRepository;
     private final JwtService jwtService;
     private final PasswordEncoder passwordEncoder;
+    private final MemberRepository memberRepository;
 
 
-    public NgoService(NgoRepository ngoRepository, Cloudinary cloudinary, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
+    public NgoService(MemberRepository memberRepository, NgoRepository ngoRepository, Cloudinary cloudinary, UserRepository userRepository, JwtService jwtService, PasswordEncoder passwordEncoder) {
         this.ngoRepository = ngoRepository;
         this.cloudinary = cloudinary;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.passwordEncoder = passwordEncoder;
+        this.memberRepository = memberRepository;
     }
 
 
@@ -184,6 +185,78 @@ public class NgoService {
                 })
                 .collect(Collectors.toList());
     }
+
+
+    //------------NGO MEMBER CREATE____________
+    public CreateMemberResponseDto createMember(UUID userId, CreateMemberDto requestDto) {
+        // Find NGO using userId from JWT
+        Ngo ngo = ngoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("NGO not found for this user"));
+
+        // Check if NGO is active
+        if (ngo.getUser().getStatus() != User.Status.ACTIVE) {
+            throw new IllegalStateException("NGO is not active. Cannot create member.");
+        }
+
+        // Create Member entity
+        Member member = new Member();
+        member.setNgo(ngo);
+        member.setName(requestDto.getName());
+        member.setAddress(requestDto.getAddress());
+        member.setPhone(requestDto.getPhone());
+        member.setMemberDesignation(requestDto.getMemberDesignation());
+
+        // Image upload (optional)
+        if (requestDto.getImage() != null && !requestDto.getImage().isEmpty()) {
+            try {
+                String base64Data = requestDto.getImage().split(",")[1];
+                byte[] fileBytes = java.util.Base64.getDecoder().decode(base64Data);
+                Map<?, ?> uploadResult = cloudinary.uploader().upload(
+                        fileBytes,
+                        Map.of("resource_type", "image", "folder", "member_images")
+                );
+                member.setImage((String) uploadResult.get("secure_url"));
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to upload member image", e);
+            }
+        }
+
+        Member savedMember = memberRepository.save(member);
+
+        // Map to response DTO
+        CreateMemberResponseDto responseDto = new CreateMemberResponseDto();
+        responseDto.setId(savedMember.getId());
+        responseDto.setNgoId(savedMember.getNgo().getNgoId());
+        responseDto.setName(savedMember.getName());
+        responseDto.setAddress(savedMember.getAddress());
+        responseDto.setPhone(savedMember.getPhone());
+        responseDto.setImage(savedMember.getImage());
+        responseDto.setMemberDesignation(savedMember.getMemberDesignation());
+        return responseDto;
+    }
+
+
+    // ------- Member List by NgoId------------
+    public List<MemberResponseDto> getAllMembers(UUID userId) {
+        // Find NGO from userId in JWT
+        Ngo ngo = ngoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("NGO not found for this user"));
+
+        List<Member> members = memberRepository.findAllByNgo(ngo);
+
+        return members.stream().map(member -> {
+            MemberResponseDto dto = new MemberResponseDto();
+            dto.setId(member.getId());
+            dto.setName(member.getName());
+            dto.setPhone(member.getPhone());
+            dto.setAddress(member.getAddress());
+            dto.setImage(member.getImage());
+            dto.setMemberDesignation(member.getMemberDesignation());
+            dto.setNgoId(member.getNgo().getNgoId());
+            return dto;
+        }).collect(Collectors.toList());
+    }
+
 
 
 

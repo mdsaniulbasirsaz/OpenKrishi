@@ -1,16 +1,11 @@
 package com.openkrishi.OpenKrishi.domain.ngo.controller;
 
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openkrishi.OpenKrishi.domain.auth.dtos.ErrorResponseDto;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.AddressUpdateRequestDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoCreateWithAddressDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoResponseDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.NgoUpdateRequestDto;
-import com.openkrishi.OpenKrishi.domain.ngo.entity.Member;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.*;
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
-import com.openkrishi.OpenKrishi.domain.ngo.services.MemberService;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
 import com.openkrishi.OpenKrishi.domain.ngo.services.NgoService;
 import com.openkrishi.OpenKrishi.domain.user.entity.User;
 import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
@@ -20,13 +15,12 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import lombok.Data;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -43,14 +37,14 @@ public class NgoController {
 
     private final NgoService ngoService;
     private final JwtService jwtService;
-    private final MemberService memberService;
     private final UserRepository userRepository;
+    private final NgoRepository ngoRepository;
 
-    public NgoController(NgoService ngoService, JwtService jwtService, UserRepository userRepository, MemberService memberService) {
+    public NgoController(NgoRepository ngoRepository, NgoService ngoService, JwtService jwtService, UserRepository userRepository) {
         this.ngoService = ngoService;
         this.jwtService = jwtService;
-        this.memberService = memberService;
         this.userRepository = userRepository;
+        this.ngoRepository = ngoRepository;
     }
 
 
@@ -173,26 +167,25 @@ public class NgoController {
     }
 
 
-    //----------------NGO Create Controller------------------
+    //----------------NGO member Create Controller------------------
     @Operation(
             summary = "Create a new member for NGO",
             description = """
-            This API endpoint allows the NGO owner to add a new member to their NGO. 
-    
-            - **Authorization**: Requires a valid JWT Bearer token in the `Authorization` header.
-            - **NGO Identification**: The NGO is automatically determined based on the userId present in the JWT token.
-            - **Member Email**: The email of the user to be added as a member must be provided as a query parameter.
-            - **Member Designation**: The role/designation of the new member (e.g., VOLUNTEER, DELIVERY_AGENT, FARMER_MANAGER) should be provided in the request body.
-            - **Preconditions**:
-                - The NGO owner (from JWT) must have active status.
-                - The user being added must exist and should not already be a member of the NGO.
-            - **Responses**:
-                - `200 OK`: Member added successfully.
-                - `400 Bad Request`: Invalid input, user not found, or user already a member.
-                - `403 Forbidden`: JWT is invalid, missing, or the requester is not authorized.
-            """,
+        Adds a new member to the authenticated NGO.
+
+        - **Authorization**: Requires a valid JWT Bearer token in the `Authorization` header.
+        - **NGO Identification**: Automatically determined from the JWT token of the requester.
+        - **Member Details**: Provide name, phone, address, memberDesignation, and optional image in the request body.
+        - **Preconditions**:
+            - The NGO must be active.
+            - The member's email (if used) or identity should not already exist in the NGO.
+        - **Responses**:
+            - `200 OK`: Member added successfully.
+            - `400 Bad Request`: Invalid input or validation failed.
+            - `403 Forbidden`: JWT is invalid, missing, or the requester is not authorized.
+        """,
             responses = {
-                    @ApiResponse(responseCode = "200", description = "Member Added Successfully"),
+                    @ApiResponse(responseCode = "200", description = "Member added successfully"),
                     @ApiResponse(responseCode = "400", description = "Bad Request or Validation Failed",
                             content = @Content(schema = @Schema(implementation = String.class))),
                     @ApiResponse(responseCode = "403", description = "Forbidden - Invalid JWT or Not Authorized")
@@ -200,26 +193,42 @@ public class NgoController {
     )
     @PostMapping("/create/member")
     public ResponseEntity<?> createMember(
-            @RequestHeader ("Authorization") String token,
-            @RequestParam String email,
-            @RequestBody MemberCreateRequest request
-    ){
+            @RequestBody CreateMemberDto createMemberDto
+    ) {
         try {
-            String jwt = token.replace("Bearer ", "");
-            UUID ngoId = jwtService.extractUserId(jwt);
+            // Get authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            String email = authentication.getName();
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+            UUID userId = user.getId();
 
-            // Call Service
-            Member member = memberService.createMember(email,ngoId, request.getDesignation());
+            // Call service
+            CreateMemberResponseDto responseDto = ngoService.createMember(userId, createMemberDto);
 
-            return  ResponseEntity.ok("Member Added Successfully Complete.");
-        } catch (Exception e){
-            return ResponseEntity.badRequest().body(e.getMessage());
+            return ResponseEntity.ok(responseDto);
+
+        } catch (RuntimeException e) {
+            logger.error("Failed to create member: {}", e.getMessage(), e);
+            ErrorResponseDto error = new ErrorResponseDto(
+                    400,
+                    e.getMessage(),
+                    e.getClass().getSimpleName(),
+                    System.currentTimeMillis()
+            );
+            return ResponseEntity.status(400).body(error);
+        } catch (Exception e) {
+            logger.error("Unexpected error creating member: {}", e.getMessage(), e);
+            ErrorResponseDto error = new ErrorResponseDto(
+                    500,
+                    "Internal server error while creating member",
+                    e.getClass().getSimpleName(),
+                    System.currentTimeMillis()
+            );
+            return ResponseEntity.status(500).body(error);
         }
     }
-    @Data
-    public static class MemberCreateRequest {
-        private Member.MemberDesignation designation;
-    }
+
 
     @GetMapping("/all/ngo")
     @Operation(
@@ -269,6 +278,42 @@ public class NgoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
         }
     }
+
+
+    //-------------Member List By Ngo---------
+    @Operation(
+            summary = "Get all members of the logged-in user's NGO",
+            description = """
+        This API endpoint retrieves all members of the NGO associated with the logged-in user.
+        
+        Requirements:
+        - Authorization header with Bearer JWT token must be provided.
+        - The `JWT` should contain the userId of the `NGO owner`.
+        
+        Behavior:
+        - The NGO is determined automatically from the logged-in user's userId.
+        - Returns a list of all members under that NGO.
+        
+        Response Codes:
+        - `200` OK: Returns a list of MemberResponseDto objects.
+        - `400` Bad Request: Invalid input or user not found.
+        - `403` Forbidden: JWT is invalid, missing, or the requester is not authorized.
+        """
+    )
+    @GetMapping("/members")
+    public ResponseEntity<List<MemberResponseDto>> getAllMembers() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        String email = authentication.getName();
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("User not found with email: " + email));
+        UUID userId = user.getId();
+
+        List<MemberResponseDto> members = ngoService.getAllMembers(userId);
+        return ResponseEntity.ok(members);
+    }
+
+
+
 
 }
 

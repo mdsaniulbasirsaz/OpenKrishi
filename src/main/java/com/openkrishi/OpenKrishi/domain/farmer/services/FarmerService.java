@@ -36,23 +36,20 @@ public class FarmerService {
     public FarmerResponseDto createFarmer(UUID userId, FarmerCreateRequestDto farmerCreateRequestDto)
     {
         // Find Member
-        Member member = memberRepository.findByUserId(userId)
-                .orElseThrow(() -> new RuntimeException("Member Not Found With Id " + userId));
+        Ngo ngo = ngoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("NGO not found with User Id " + userId));
 
 
-        // Find Ngo
-        Ngo ngo = member.getNgo();
 
-        //Create Farmer
+        // Create Farmer
         Farmer farmer = new Farmer();
         farmer.setFarmerName(farmerCreateRequestDto.getFarmerName());
         farmer.setPhone(farmerCreateRequestDto.getPhone());
         farmer.setLatitude(farmerCreateRequestDto.getLatitude());
         farmer.setLongitude(farmerCreateRequestDto.getLongitude());
-        farmer.setCreatedBy(member);
         farmer.setNgo(ngo);
 
-        Farmer savedFarmer =  farmerRepository.save(farmer);
+        Farmer savedFarmer = farmerRepository.save(farmer);
 
         return mapToDto(savedFarmer);
     }
@@ -64,10 +61,7 @@ public class FarmerService {
         responseDto.setPhone(farmer.getPhone());
         responseDto.setLatitude(farmer.getLatitude());
         responseDto.setLongitude(farmer.getLongitude());
-        responseDto.setCreatedByMemberId(farmer.getCreatedBy().getId());
-        responseDto.setCreatedByMemberName(farmer.getCreatedBy().getUser().getFullName());
         responseDto.setNgoId(farmer.getNgo().getNgoId());
-        responseDto.setNgoManagerName(farmer.getNgo().getManagerName());
         return responseDto;
     }
 }

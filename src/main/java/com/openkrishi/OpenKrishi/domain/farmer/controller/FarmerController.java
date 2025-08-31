@@ -36,12 +36,8 @@ public class FarmerController {
             description = "This API creates a new farmer under the logged-in member's `NGO`.\n" +
                     "Requirements:\n" +
                     "- `Authorization` header with Bearer JWT token must be provided.\n" +
-                    "- The `JWT` should contain the userId of the member.\n" +
+                    "- The `JWT` should contain the userId of the NGO owner.\n" +
                     "- Request body must contain farmer details including `FarmerName`, `phone`, `latitude`, and `longitude`.\n\n" +
-                    "Behavior:\n" +
-                    "- The createdBy field of the farmer is set to the member associated with the JWT.\n" +
-                    "- The ngo field is automatically set to the member's NGO.\n" +
-                    "- On success, returns a FarmerResponseDto with all relevant information.\n\n" +
                     "Response Codes:\n" +
                     "- `200`: Farmer created successfully.\n" +
                     "- `400`: Bad request or member not found.\n" +
