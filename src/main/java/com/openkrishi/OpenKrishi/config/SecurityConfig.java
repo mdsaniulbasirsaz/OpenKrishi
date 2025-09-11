@@ -39,9 +39,9 @@ public class SecurityConfig {
                         "/v1/api/customer/auth/login",
                         "/v1/admin/profiles",
                         "/v1/admin/success",
-                            "/v1/api/users/",
+                            "/api/v1/users/",
                             "/api/ngos/update",
-                            "/v1/api/users/login",
+                            "/api/v1/users/login",
                             "/api/v1/ngos/register/ngo"
                     ).permitAll()
                     .anyRequest().authenticated()

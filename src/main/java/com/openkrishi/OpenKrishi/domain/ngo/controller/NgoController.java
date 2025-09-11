@@ -1,6 +1,7 @@
 package com.openkrishi.OpenKrishi.domain.ngo.controller;
 
 
+import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
 import com.openkrishi.OpenKrishi.domain.auth.dtos.ErrorResponseDto;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.*;
@@ -85,31 +86,39 @@ public class NgoController {
     })
     @PostMapping(value = "/register/ngo")
     public ResponseEntity<?> createNgo(
-           @RequestBody NgoCreateWithAddressDto ngoCreateWithAddressDto
-    )  {
+            @RequestBody NgoCreateWithAddressDto ngoCreateWithAddressDto
+    ) {
 
         try {
             if (userRepository.findByEmail(ngoCreateWithAddressDto.getEmail()).isPresent()) {
                 // Email already exists
                 return ResponseEntity.badRequest()
-                        .body(Map.of("status", "ERROR", "message", "Email already exists."));
+                        .body(Map.of(
+                                "status", "ERROR",
+                                "message", "Email already exists."
+                        ));
             }
 
-            ngoService.createNgoWithAddress(ngoCreateWithAddressDto);
+            // Create NGO user
+            User newUser = ngoService.createNgoWithAddress(ngoCreateWithAddressDto);
 
-            // Successfully created
-            return ResponseEntity.ok(
-                    Map.of("status", "SUCCESS", "message", "Successfully Created.")
+            // Build AuthResponseDto with token using JwtService
+            AuthResponseDto authResponse = jwtService.buildAuthResponse(
+                    newUser.getEmail(),
+                    newUser.getFullName(),
+                    newUser.getId()
             );
+
+            // Return success response with token
+            return ResponseEntity.ok(authResponse);
+
         } catch (Exception e) {
             logger.error("Failed to create NGO: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(
-                            Map.of(
-                                    "status", "ERROR",
-                                    "message", "Failed to create NGO: " + e.getMessage()
-                            )
-                    );
+                    .body(Map.of(
+                            "status", "ERROR",
+                            "message", "Failed to create NGO: " + e.getMessage()
+                    ));
         }
     }
 
