@@ -164,6 +164,8 @@ public class NgoService {
                 .map(user -> {
                     Ngo ngo = user.getNgo();
                     Address address = ngo.getAddress();
+                    User userStatus = ngo.getUser();
+
 
 
                     return new NgoResponseDto(
@@ -175,6 +177,7 @@ public class NgoService {
                             user.getLongitude(),
                             ngo.getManagerName(),
                             ngo.getLicenceUrl(),
+                            userStatus.getStatus().toString(),
                             address.getStreet(),
                             address.getHouseNo(),
                             address.getCity(),

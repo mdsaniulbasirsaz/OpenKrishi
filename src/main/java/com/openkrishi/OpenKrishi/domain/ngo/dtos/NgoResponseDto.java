@@ -20,6 +20,7 @@ public class NgoResponseDto {
 
     private String managerName;
     private String licenceUrl;
+    private String Status;
 
     private String street;
     private String houseNo;
