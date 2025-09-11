@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.security.core.Authentication;
 
 @RestController
-@RequestMapping("v1/api/customer/auth")
+@RequestMapping("/api/v1/customer/auth")
 public class CustomerAuthController {
     private final CustomerAuthService authService;
 

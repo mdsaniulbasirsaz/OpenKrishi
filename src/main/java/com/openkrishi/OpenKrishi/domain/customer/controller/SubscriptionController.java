@@ -24,7 +24,7 @@ import java.util.UUID;
 
 
 @RestController
-@RequestMapping("/v1/api/subscriptions")
+@RequestMapping("/api/v1/subscriptions")
 @RequiredArgsConstructor
 public class SubscriptionController {
 

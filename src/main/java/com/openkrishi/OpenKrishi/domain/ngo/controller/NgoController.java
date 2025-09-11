@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/ngos")
+@RequestMapping("/api/v1/ngos")
 public class NgoController {
 
     private static final Logger logger = LoggerFactory.getLogger(NgoController.class);

@@ -21,7 +21,7 @@ import com.openkrishi.OpenKrishi.domain.admin.repository.ProfileRepository;
 
 
 @RestController
-@RequestMapping("v1/admin")
+@RequestMapping("/api/v1/admin")
 public class AdminController {
 
     @Autowired

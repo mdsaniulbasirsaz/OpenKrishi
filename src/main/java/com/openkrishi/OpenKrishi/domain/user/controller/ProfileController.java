@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 @RestController
-@RequestMapping("/api/profiles")
+@RequestMapping("/api/v1/profiles")
 public class ProfileController {
 
     private final ProfileService profileService;

@@ -15,7 +15,7 @@ import java.util.UUID;
 
 
 @RestController
-@RequestMapping("/farmers")
+@RequestMapping("api/v1/farmers")
 public class FarmerController {
 
     private final FarmerService farmerService;
