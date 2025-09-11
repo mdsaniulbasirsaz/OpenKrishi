@@ -26,6 +26,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -89,15 +90,26 @@ public class NgoController {
 
         try {
             if (userRepository.findByEmail(ngoCreateWithAddressDto.getEmail()).isPresent()) {
-                return ResponseEntity.badRequest().body("Email already exists.");
+                // Email already exists
+                return ResponseEntity.badRequest()
+                        .body(Map.of("status", "ERROR", "message", "Email already exists."));
             }
 
             ngoService.createNgoWithAddress(ngoCreateWithAddressDto);
-            return ResponseEntity.ok("Successfully Created.");
+
+            // Successfully created
+            return ResponseEntity.ok(
+                    Map.of("status", "SUCCESS", "message", "Successfully Created.")
+            );
         } catch (Exception e) {
             logger.error("Failed to create NGO: {}", e.getMessage(), e);
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Failed to create NGO: " + e.getMessage());
+                    .body(
+                            Map.of(
+                                    "status", "ERROR",
+                                    "message", "Failed to create NGO: " + e.getMessage()
+                            )
+                    );
         }
     }
 

@@ -42,7 +42,7 @@ public class SecurityConfig {
                             "/v1/api/users/",
                             "/api/ngos/update",
                             "/v1/api/users/login",
-                            "/api/ngos/register/ngo"
+                            "/api/v1/ngos/register/ngo"
                     ).permitAll()
                     .anyRequest().authenticated()
                 )
