@@ -1,6 +1,7 @@
 package com.openkrishi.OpenKrishi.domain.admin.controller;
 
 import com.openkrishi.OpenKrishi.domain.admin.services.NgoStatusUpdateServices;
+import com.openkrishi.OpenKrishi.domain.auth.dtos.ErrorResponseDto;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.user.entity.User;
 import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
@@ -12,7 +13,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -69,7 +72,7 @@ public class AdminController {
     })
     @PostMapping("/ngo/updateStatus")
     @Transactional
-    public ResponseEntity<String> updateNgoStatus(
+    public ResponseEntity<?> updateNgoStatus(
             @RequestHeader("Authorization") String token,
             @RequestParam String email) {
 
@@ -83,19 +86,42 @@ public class AdminController {
             // Verify admin role
             Optional<User> adminUserOpt = userRepository.findById(adminId);
             if (adminUserOpt.isEmpty() || adminUserOpt.get().getRole() != User.Role.ADMIN) {
-                return ResponseEntity.status(403).body("Forbidden: Only admins can perform this action.");
+                ErrorResponseDto error = new ErrorResponseDto(
+                        403,
+                        "Forbidden: Only admins can perform this action.",
+                        "FORBIDDEN",
+                        Instant.now().toEpochMilli()
+                );
+                return ResponseEntity.status(403).body(error);
             }
 
             // Activate NGO
             boolean updated = ngoStatusUpdateServices.activeNgoByEmail(email);
             if (updated) {
-                return ResponseEntity.ok("NGO with email " + email + " has been activated successfully.");
+                // Using a simple success map
+                return ResponseEntity.ok(Map.of(
+                        "status", 200,
+                        "message", "NGO with email " + email + " has been activated successfully.",
+                        "timestamp", Instant.now().toEpochMilli()
+                ));
             } else {
-                return ResponseEntity.status(404).body("NGO with email " + email + " not found or not an NGO.");
+                ErrorResponseDto error = new ErrorResponseDto(
+                        404,
+                        "NGO with email " + email + " not found or not an NGO.",
+                        "NOT_FOUND",
+                        Instant.now().toEpochMilli()
+                );
+                return ResponseEntity.status(404).body(error);
             }
 
         } catch (Exception e) {
-            return ResponseEntity.status(401).body("Unauthorized: Invalid token.");
+            ErrorResponseDto error = new ErrorResponseDto(
+                    401,
+                    "Unauthorized: Invalid token.",
+                    "UNAUTHORIZED",
+                    Instant.now().toEpochMilli()
+            );
+            return ResponseEntity.status(401).body(error);
         }
     }
 }
