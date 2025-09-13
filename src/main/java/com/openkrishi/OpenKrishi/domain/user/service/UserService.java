@@ -45,7 +45,8 @@ public class UserService {
         AuthResponseDto authResponse = jwtService.buildAuthResponse(
                 user.getEmail(),
                 user.getFullName(),
-                user.getId()
+                user.getId(),
+                user.getRole().name()
         );
 
         return UserResponseDto.builder()

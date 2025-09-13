@@ -10,10 +10,7 @@ import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.Optional;
-import java.util.UUID;
-import java.util.function.Function;
 
 @Service
 public class LoginService {
@@ -24,10 +21,10 @@ public class LoginService {
     private final UserRepository userRepository;
 
     public LoginService(
-        CustomerRepository customerRepository,
-        PasswordEncoder passwordEncoder,
-        JwtService jwtService,
-        UserRepository userRepository
+            CustomerRepository customerRepository,
+            PasswordEncoder passwordEncoder,
+            JwtService jwtService,
+            UserRepository userRepository
     ) {
         this.customerRepository = customerRepository;
         this.passwordEncoder = passwordEncoder;
@@ -39,17 +36,32 @@ public class LoginService {
         String email = loginDto.getEmail();
         String rawPassword = loginDto.getPassword();
 
-        // User Find
+        // Try to find User first
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isPresent()) {
             User user = userOpt.get();
+
+            // Check if user is active, unless role is CUSTOMER
+            if (!user.getRole().name().equals("CUSTOMER")
+                    && !"ACTIVE".equalsIgnoreCase(user.getStatus().name())) {
+                throw new RuntimeException("Invalid credentials"); // hide inactive info
+            }
+
+            // Check password
             if (!passwordEncoder.matches(rawPassword, user.getPassword())) {
                 throw new RuntimeException("Invalid credentials");
             }
-            return jwtService.buildAuthResponse(user.getEmail(), user.getFullName(), user.getId());
-        }
-        Optional<Customer> customerOpt = customerRepository.findByEmail(email);
 
+            return jwtService.buildAuthResponse(
+                    user.getEmail(),
+                    user.getFullName(),
+                    user.getId(),
+                    user.getRole().name()
+            );
+        }
+
+        // Try to find Customer
+        Optional<Customer> customerOpt = customerRepository.findByEmail(email);
         if (customerOpt.isEmpty()) {
             throw new RuntimeException("Invalid credentials");
         }
@@ -61,11 +73,11 @@ public class LoginService {
             throw new RuntimeException("Invalid credentials");
         }
 
-        // Build response
         return jwtService.buildAuthResponse(
                 customer.getEmail(),
                 customer.getFullName(),
-                customer.getId()
+                customer.getId(),
+                "CUSTOMER"
         );
     }
 }

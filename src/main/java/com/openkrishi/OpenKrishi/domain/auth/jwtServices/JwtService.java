@@ -2,6 +2,7 @@ package com.openkrishi.OpenKrishi.domain.auth.jwtServices;
 
 
 import com.openkrishi.OpenKrishi.domain.auth.dtos.AuthResponseDto;
+import com.openkrishi.OpenKrishi.domain.user.entity.User;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
@@ -33,7 +34,7 @@ public class JwtService {
         this.key = Keys.hmacShaKeyFor(secret.getBytes());
     }
 
-    public String generateToken(String email, String fullName, UUID userId ) {
+    public String generateToken(String email, String fullName, UUID userId, String role ) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + jwtExpirationInMs);
 
@@ -76,9 +77,9 @@ public class JwtService {
     }
 
 
-    public AuthResponseDto buildAuthResponse(String email, String fullName, UUID userId) {
-        String token = generateToken(email, fullName, userId);
-        return new AuthResponseDto(token, fullName, email, userId.toString());
+    public AuthResponseDto buildAuthResponse(String email, String fullName, UUID userId, String role) {
+        String token = generateToken(email, fullName, userId, role);
+        return new AuthResponseDto(token, fullName, email, userId.toString(), role);
     }
 
     private Claims extractAllClaims(String token) {

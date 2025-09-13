@@ -40,7 +40,7 @@ public class CustomerAuthService {
         customer.setLatitude(registerDto.getLatitude());
         customer.setLongitude(registerDto.getLongitude());
         customerRepository.save(customer);
-        return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName(), customer.getId());
+        return jwtService.buildAuthResponse(customer.getEmail(), customer.getFullName(), customer.getId(), "CUSTOMER");
     }
 
 

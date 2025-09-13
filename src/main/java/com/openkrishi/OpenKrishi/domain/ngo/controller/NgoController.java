@@ -106,7 +106,8 @@ public class NgoController {
             AuthResponseDto authResponse = jwtService.buildAuthResponse(
                     newUser.getEmail(),
                     newUser.getFullName(),
-                    newUser.getId()
+                    newUser.getId(),
+                    newUser.getRole().name()
             );
 
             // Return success response with token
