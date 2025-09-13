@@ -1,5 +1,6 @@
 package com.openkrishi.OpenKrishi.domain.user.dto;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.openkrishi.OpenKrishi.domain.user.entity.User;
 import lombok.Data;
 
@@ -14,6 +15,7 @@ public class UserDto {
     private Double latitude;
     private Double longitude;
     public User.Role role;
+    @JsonIgnore
     public User.Status status;
     public User.SubscriptionStatus subscriptionStatus;
     private String password;

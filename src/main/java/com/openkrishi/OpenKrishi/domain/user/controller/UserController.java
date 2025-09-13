@@ -29,9 +29,9 @@ public class UserController {
     @PostMapping("/")
     public ResponseEntity<UserResponseDto> addUser(@RequestBody UserDto userDto) {
         if(userDto.role == User.Role.NGO){
-            userDto.status = User.Status.INACTIVE;
+           userDto.setStatus(User.Status.INACTIVE);
         }else{
-            userDto.status = User.Status.ACTIVE;
+            userDto.setStatus(User.Status.ACTIVE);
         }
         UserResponseDto createdUser = userService.createUser(userDto);
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);

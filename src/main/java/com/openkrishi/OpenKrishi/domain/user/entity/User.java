@@ -95,7 +95,13 @@ public class User {
         updatedAt = now;
         isDelete = false;
         isSubscribed = SubscriptionStatus.NO;
-        status = Status.INACTIVE;
+        if (status == null) {
+            if (role == Role.CUSTOMER) {
+                status = Status.ACTIVE;
+            } else {
+                status = Status.INACTIVE;
+            }
+        }
     }
 
     private String generateCustomId() {
