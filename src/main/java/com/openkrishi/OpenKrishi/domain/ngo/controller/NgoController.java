@@ -16,6 +16,7 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -283,9 +284,27 @@ public class NgoController {
             @ApiResponse(responseCode = "403", description = "Forbidden: You do not have permission to access this resource"),
             @ApiResponse(responseCode = "500", description = "Internal server error while fetching NGOs")
     })
-    public ResponseEntity<?> getAllNgos()
+    public ResponseEntity<?> getAllNgos(HttpServletRequest request)
     {
         try{
+            // Get JWT from Authorization header
+            String authHeader = request.getHeader("Authorization");
+            if (authHeader == null || !authHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body("Missing or invalid Authorization header");
+            }
+
+            String token = authHeader.substring(7);
+            String role = jwtService.getRoleFromToken(token);
+            if (!"ADMIN".equals(role)) {
+                ErrorResponseDto error = new ErrorResponseDto(
+                        HttpStatus.FORBIDDEN.value(),
+                        "Access Denied: Only admins can access this API",
+                        "ForbiddenAccess",
+                        System.currentTimeMillis()
+                );
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
+            }
             List<NgoResponseDto> ngos = ngoService.FindAllNgos();
             return ResponseEntity.ok(ngos);
         } catch (Exception e)
