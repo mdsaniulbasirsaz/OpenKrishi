@@ -261,5 +261,125 @@ public class CategoryController {
     }
 
 
+    //______________Update Category------------
+    @Operation(
+            summary = "Update a category",
+            description = "This API updates the name of an existing category by its unique UUID.\n" +
+                    "Requirements:\n" +
+                    "- The user must be authenticated with a valid `JWT` token provided in the Authorization header.\n" +
+                    "- The user must be associated with an `ACTIVE` NGO.\n" +
+                    "- Only NGO users with ACTIVE status can update categories.\n" +
+                    "Process:\n" +
+                    "- Validate JWT token and extract the user ID.\n" +
+                    "- Ensure the NGO linked to the user ID is ACTIVE.\n" +
+                    "- Find the category by ID.\n" +
+                    "- Update the category name with the new value provided in the request body.\n" +
+                    "Possible Errors:\n" +
+                    "- `401` Unauthorized: JWT token is invalid or missing.\n" +
+                    "- `403` Forbidden: Only NGO users with ACTIVE status can update categories.\n" +
+                    "- `404` Not Found: No category exists with the given ID.\n" +
+                    "- `400` Bad Request: Invalid request or update failed."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Category updated successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or update failed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, NGO not active"),
+            @ApiResponse(responseCode = "404", description = "Category not found")
+    })
+    @PutMapping("/{id}")
+    public ResponseEntity<CategoryApiResponseDto<Category>> updateCategory(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("id") UUID categoryId,
+            @RequestBody CategoryCreateDto categoryCreateDto
+    ) {
+        try {
+            // JWT and NGO validation
+            UUID userId = jwtService.extractUserId(token.replace("Bearer ", ""));
+            ngoRepository.findByUser_IdAndUserStatus(userId, User.Status.ACTIVE)
+                    .orElseThrow(() -> new RuntimeException("Active NGO not found for user id: " + userId));
+
+            // Update category
+            Category updatedCategory = categoryService.updateCategory(categoryId, categoryCreateDto.getCategoryName());
+
+
+            if(updatedCategory.getProducts() != null) {
+                updatedCategory.setProducts(null);
+            }
+
+            //Api Response
+            CategoryApiResponseDto<Category> response = new CategoryApiResponseDto<>();
+            response.setSuccess(true);
+            response.setMessage("Category updated successfully.");
+            response.setData(updatedCategory);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            CategoryApiResponseDto<Category> response = new CategoryApiResponseDto<>();
+            response.setSuccess(false);
+            response.setMessage(e.getMessage());
+            response.setData(null);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+    //______________Delete Category------------
+    @Operation(
+            summary = "Delete a category",
+            description = "This API deletes a category by its unique UUID.\n" +
+                    "Requirements:\n" +
+                    "- The user must be authenticated with a valid `JWT` token.\n" +
+                    "- The user must be associated with an `ACTIVE` NGO.\n" +
+                    "- When deleting a category:\n" +
+                    "   - If products are linked to this category, consider marking them as `isAvailable = false` (soft delete) " +
+                    "instead of hard deletion to avoid foreign key violations.\n" +
+                    "Possible Errors:\n" +
+                    "- `401` Unauthorized: JWT token is invalid or missing.\n" +
+                    "- `403` Forbidden: Only NGO users with ACTIVE status can delete.\n" +
+                    "- `400` Bad Request: Category not found or deletion failed.\n" +
+                    "- `409` Conflict: If deletion violates database constraints."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Category deleted successfully"),
+            @ApiResponse(responseCode = "400", description = "Invalid request or deletion failed"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden, NGO not active"),
+            @ApiResponse(responseCode = "409", description = "Conflict, category has dependent records")
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<CategoryApiResponseDto<String>> deleteCategory(
+            @RequestHeader("Authorization") String token,
+            @PathVariable("id") UUID categoryId
+    ) {
+        try {
+            // JWT and NGO validation
+            UUID userId = jwtService.extractUserId(token.replace("Bearer ", ""));
+            ngoRepository.findByUser_IdAndUserStatus(userId, User.Status.ACTIVE)
+                    .orElseThrow(() -> new RuntimeException("Active NGO not found for user id: " + userId));
+
+            // Delete category
+            categoryService.deleteCategory(categoryId);
+
+            // Response API
+            CategoryApiResponseDto<String> response = new CategoryApiResponseDto<>();
+            response.setSuccess(true);
+            response.setMessage("Category deleted successfully.");
+            response.setData("Deleted ID: " + categoryId);
+
+            return ResponseEntity.ok(response);
+
+        } catch (Exception e) {
+            CategoryApiResponseDto<String> response = new CategoryApiResponseDto<>();
+            response.setSuccess(false);
+            response.setMessage(e.getMessage());
+            response.setData(null);
+            return ResponseEntity.badRequest().body(response);
+        }
+    }
+
+
+
+
+
 
 }

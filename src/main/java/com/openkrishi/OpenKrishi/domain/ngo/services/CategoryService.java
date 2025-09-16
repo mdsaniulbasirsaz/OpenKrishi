@@ -48,5 +48,27 @@ public class CategoryService {
         return categoryRepository.existsByCategoryName(categoryName);
     }
 
+    // Update category
+    public Category updateCategory(UUID categoryId, String newName) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found for id: " + categoryId));
+        category.setCategoryName(newName);
+        return categoryRepository.save(category);
+    }
+
+    // Delete category
+    public void deleteCategory(UUID categoryId) {
+        Category category = categoryRepository.findById(categoryId)
+                .orElseThrow(() -> new RuntimeException("Category not found for id: " + categoryId));
+
+        if (category.getProducts() != null) {
+            category.getProducts().forEach(product -> product.setIsAvailable(false));
+        }
+
+        categoryRepository.save(category);
+
+    }
+
+
 
 }
