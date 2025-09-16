@@ -8,6 +8,11 @@ COPY gradlew gradlew.bat ./
 COPY gradle/ gradle/
 COPY src/ src/
 
+# Make gradlew executable
+RUN chmod +x gradlew
+
+# Build JAR
+
 RUN ./gradlew clean build -x test
 
 # Runtime stage
