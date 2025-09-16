@@ -1,14 +1,20 @@
-# Base image
-FROM openjdk:17-jdk-slim
+# Build stage
+FROM gradle:8.4-jdk17 AS build
 
-# App directory
 WORKDIR /app
 
-# Copy built JAR file  (case-sensitive)
-COPY build/libs/OpenKrishi-0.0.1-SNAPSHOT.jar app.jar
+COPY build.gradle settings.gradle ./
+COPY gradlew gradlew.bat ./
+COPY gradle/ gradle/
+COPY src/ src/
 
-# Expose port
+RUN ./gradlew clean build -x test
+
+# Runtime stage
+FROM openjdk:17-jdk-slim
+WORKDIR /app
+
+COPY --from=build /app/build/libs/OpenKrishi-0.0.1-SNAPSHOT.jar app.jar
+
 EXPOSE 8085
-
-# Run the app
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
