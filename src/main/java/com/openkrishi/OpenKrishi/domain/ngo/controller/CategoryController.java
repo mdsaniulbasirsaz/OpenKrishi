@@ -14,7 +14,9 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 @RestController
@@ -61,11 +63,15 @@ public class CategoryController {
             @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token")
     })
     @PostMapping("/create")
-    public ResponseEntity<String> createCategory(
+    public ResponseEntity<CategoryApiResponseDto<Category>> createCategory(
             @RequestHeader("Authorization") String token,
             @RequestBody CategoryCreateDto categoryCreateDto
             ){
         try {
+
+            System.out.println("Received DTO: " + categoryCreateDto);
+            System.out.println("Category Name: " + (categoryCreateDto != null ? categoryCreateDto.getCategoryName() : "null"));
+
             String jwt = token.replace("Bearer ", "");
             UUID userId = jwtService.extractUserId(jwt);
 
@@ -74,15 +80,33 @@ public class CategoryController {
                     .orElseThrow(() -> new RuntimeException("Active NGO not found for user id: " + userId));
 
 
+            // Check if category already exists
+            if (categoryService.existsByName(categoryCreateDto.getCategoryName())) {
+                CategoryApiResponseDto<Category> response = new CategoryApiResponseDto<>();
+                response.setSuccess(false);
+                response.setMessage("Category with name '" + categoryCreateDto.getCategoryName() + "' already exists.");
+                response.setData(null);
+                return ResponseEntity.badRequest().body(response);
+            }
+
             // Create Category
             Category category = Category.builder()
                     .categoryName(categoryCreateDto.getCategoryName())
                     .build();
             categoryService.createCategory(category);
 
-            return ResponseEntity.ok("Category created successfully.");
+            // Return JSON response
+            CategoryApiResponseDto<Category> response = new CategoryApiResponseDto<>();
+            response.setSuccess(true);
+            response.setMessage("Category created successfully.");
+            response.setData(category);
+            return ResponseEntity.ok(response);
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+            CategoryApiResponseDto<Category> errorResponse = new CategoryApiResponseDto<>();
+            errorResponse.setSuccess(false);
+            errorResponse.setMessage(e.getMessage());
+            errorResponse.setData(null);
+            return ResponseEntity.badRequest().body(errorResponse);
         }
 
     }

@@ -3,6 +3,7 @@ package com.openkrishi.OpenKrishi.domain.ngo.services;
 
 import com.openkrishi.OpenKrishi.domain.ngo.entity.Category;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.CategoryRepository;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -12,7 +13,7 @@ import java.util.UUID;
 @Service
 public class CategoryService {
 
-
+    @Autowired
     private final CategoryRepository categoryRepository;
 
     public CategoryService(CategoryRepository categoryRepository) {
@@ -40,6 +41,11 @@ public class CategoryService {
     public List<Category> searchCategories(String keyword)
     {
         return categoryRepository.findByCategoryNameContainingIgnoreCase(keyword);
+    }
+
+    // Already Exists Check
+    public boolean existsByName(String categoryName) {
+        return categoryRepository.existsByCategoryName(categoryName);
     }
 
 
