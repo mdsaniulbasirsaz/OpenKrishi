@@ -74,3 +74,15 @@ DB_PASSWORD=
 By default, the app runs at [http://localhost:PORT/swagger-ui/index.html](http://localhost:PORT/swagger-ui/index.html).
 
 ---
+
+## Test Using Java jar file
+
+```
+.\gradlew.bat clean build -x test
+
+```
+then
+```
+java -jar .\build\libs\openkrishi-0.0.1-SNAPSHOT.jar
+
+```
