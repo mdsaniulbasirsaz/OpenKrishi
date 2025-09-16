@@ -13,14 +13,12 @@ public class CloudinaryConfig {
 
     @Bean
     public Cloudinary cloudinary() {
-        Dotenv dotenv = Dotenv.load();
-
-        String cloudName = dotenv.get("CLOUDINARY_CLOUD_NAME");
-        String apiKey = dotenv.get("CLOUDINARY_API_KEY");
-        String apiSecret = dotenv.get("CLOUDINARY_API_SECRET");
+        String cloudName = System.getenv("CLOUDINARY_CLOUD_NAME");
+        String apiKey = System.getenv("CLOUDINARY_API_KEY");
+        String apiSecret = System.getenv("CLOUDINARY_API_SECRET");
 
         if(cloudName == null || apiKey == null || apiSecret == null){
-            throw new IllegalStateException("Cloudinary .env variables missing!");
+            throw new IllegalStateException("Cloudinary environment variables missing!");
         }
 
         return new Cloudinary(ObjectUtils.asMap(
