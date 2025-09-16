@@ -19,9 +19,10 @@ public class JwtService {
     private final long jwtExpirationInMs;
 
     public JwtService() {
-        Dotenv dotenv = Dotenv.load();
-        String secret = dotenv.get("JWT_SECRET");
-        String expirationStr = dotenv.get("JWT_EXPIRATION");
+        // Load secrets from environment variables (production)
+        String secret = System.getenv("JWT_SECRET");
+        String expirationStr = System.getenv("JWT_EXPIRATION");
+
 
         if (secret == null || secret.isEmpty()) {
             throw new IllegalStateException("JWT_SECRET is not set in .env file");
