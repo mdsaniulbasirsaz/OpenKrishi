@@ -4,10 +4,10 @@ FROM openjdk:17-jdk-slim
 # App directory
 WORKDIR /app
 
-# Copy built JAR file
-COPY build/libs/openkrishi-0.0.1-SNAPSHOT.jar app.jar
+# Copy built JAR file (case-sensitive)
+COPY build/libs/OpenKrishi-0.0.1-SNAPSHOT.jar app.jar
 
-# Expose port (optional)
+# Expose port
 EXPOSE 8085
 
 # Run the app
