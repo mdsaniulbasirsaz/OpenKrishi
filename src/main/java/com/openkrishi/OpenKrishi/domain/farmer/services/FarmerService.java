@@ -11,7 +11,9 @@ import com.openkrishi.OpenKrishi.domain.ngo.repository.MemberRepository;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class FarmerService {
@@ -63,5 +65,13 @@ public class FarmerService {
         responseDto.setLongitude(farmer.getLongitude());
         responseDto.setNgoId(farmer.getNgo().getNgoId());
         return responseDto;
+    }
+
+
+    //--------- Get All Farmer-------------
+    public List<FarmerResponseDto> getAllFarmers(){
+        List<Farmer> farmers = farmerRepository.findAll();
+
+        return  farmers.stream().map(this::mapToDto).collect(Collectors.toList());
     }
 }
