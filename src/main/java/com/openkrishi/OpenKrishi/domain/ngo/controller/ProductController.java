@@ -4,14 +4,11 @@ package com.openkrishi.OpenKrishi.domain.ngo.controller;
 import com.openkrishi.OpenKrishi.domain.auth.jwtServices.JwtService;
 import com.openkrishi.OpenKrishi.domain.farmer.entity.Farmer;
 import com.openkrishi.OpenKrishi.domain.farmer.repostitory.FarmerRepository;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductCreateDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductResponseDto;
-import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductUpdateDto;
-import com.openkrishi.OpenKrishi.domain.ngo.entity.Category;
-import com.openkrishi.OpenKrishi.domain.ngo.entity.Ngo;
-import com.openkrishi.OpenKrishi.domain.ngo.entity.Product;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.*;
+import com.openkrishi.OpenKrishi.domain.ngo.entity.*;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.CategoryRepository;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
+import com.openkrishi.OpenKrishi.domain.ngo.services.DeliveryChargeService;
 import com.openkrishi.OpenKrishi.domain.ngo.services.ProductService;
 import com.openkrishi.OpenKrishi.domain.user.entity.User;
 import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
@@ -22,13 +19,13 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.UUID;
 
 @RestController
@@ -44,6 +41,7 @@ public class ProductController {
     private final FarmerRepository farmerRepository;
     private final CategoryRepository categoryRepository;
     private final UserRepository userRepository;
+    private final DeliveryChargeService deliveryChargeService;
 
 
     public ProductController(
@@ -52,7 +50,8 @@ public class ProductController {
             NgoRepository ngoRepository,
             FarmerRepository farmerRepository,
             CategoryRepository categoryRepository,
-            UserRepository userRepository
+            UserRepository userRepository,
+            DeliveryChargeService deliveryChargeService
     ){
         this.productService = productService;
         this.jwtService = jwtService;
@@ -60,6 +59,7 @@ public class ProductController {
         this.farmerRepository = farmerRepository;
         this.categoryRepository = categoryRepository;
         this.userRepository = userRepository;
+        this.deliveryChargeService = deliveryChargeService;
     }
 
 
@@ -566,5 +566,90 @@ public class ProductController {
                     "Details", e.getMessage()
             ));
         }
+    }
+
+    // -----------Add Delivery Charge------------
+    @Operation(
+            summary = "Add delivery charge for a specific NGO",
+            description = "This API allows admin or authorized users to add a delivery charge for a given `NGO`.\n" +
+                    "Requirements:\n" +
+                    "- The user must be authenticated with a valid `JWT` token.\n" +
+                    "- The `ngoId` must be valid and exist in the database.\n" +
+                    "Process:\n" +
+                    "- Validate the `JWT` token and check user permission.\n" +
+                    "- Validate the `amountPerKm` value.\n" +
+                    "- Save the delivery charge linked to the specified `NGO`.\n" +
+                    "Parameters:\n" +
+                    "- `ngoId` (required): UUID of the NGO.\n" +
+                    "- `amountPerKm` (required): Delivery charge per kilometer.\n" +
+                    "Possible Errors:\n" +
+                    "- `401` Unauthorized: JWT token invalid or missing.\n" +
+                    "- `400` Bad Request: Invalid `ngoId` or `amountPerKm` value.\n" +
+                    "- `500` Internal Server Error: Unexpected errors during saving."
+    )
+
+    @PostMapping("/delivery/charge/create")
+    public ResponseEntity<?> addDeliveryCharge(@RequestBody DeliveryChargeRequestDto request) {
+        DeliveryCharge savedCharge = deliveryChargeService.addDeliveryCharge(
+                request.getNgoId(),
+                request.getAmountPerKm()
+        );
+        DeliveryChargeResponseDto response = new DeliveryChargeResponseDto(
+                savedCharge.getId(),
+                savedCharge.getAmountPerKm(),
+                savedCharge.getNgo().getNgoId()
+        );
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
+    //------------------Product Order--------------------
+    @Operation(
+            summary = "Create a new order with multiple products",
+            description = "This API allows users to create a new `order` containing one or more products.\n" +
+                    "Requirements:\n" +
+                    "- The user must be `authenticated` with a valid JWT token.\n" +
+                    "- The `userId` and `ngoId` must be valid UUIDs.\n" +
+                    "Process:\n" +
+                    "- Validate the `JWT token` and extract `user ID`.\n" +
+                    "- Validate items list to ensure each product exists and quantity is valid.\n" +
+                    "- Calculate total price and delivery charges.\n" +
+                    "- Save the order and associated order items in the database.\n" +
+                    "Parameters:\n" +
+                    "- `userId` (required): UUID of the user placing the order.\n" +
+                    "- `ngoId` (required): UUID of the NGO fulfilling the order.\n" +
+                    "- `items` (required): List of OrderItemRequestDto containing productId, quantity, and optional description.\n" +
+                    "Possible Errors:\n" +
+                    "- `401` Unauthorized: JWT token invalid or missing.\n" +
+                    "- `400` Bad Request: Invalid UUIDs, empty items list, or invalid quantities.\n" +
+                    "- `500` Internal Server Error: Unexpected errors during order creation.\n" +
+                    "- `403` Forbidden: If the user does not have permission to create orders."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Order created successfully with success message"),
+            @ApiResponse(responseCode = "400", description = "Bad request or invalid parameters"),
+            @ApiResponse(responseCode = "401", description = "Unauthorized or invalid JWT token"),
+            @ApiResponse(responseCode = "403", description = "Forbidden: User does not have permission"),
+            @ApiResponse(responseCode = "500", description = "Internal server error")
+    })
+
+
+    @PostMapping("/order/create")
+    public ResponseEntity<OrderSuccessResponseDto> createOrder(
+            @RequestParam UUID userId,
+            @RequestParam UUID ngoId,
+            @RequestBody List<OrderItemRequestDto> items
+    ) {
+        //Create Order
+        productService.createOrder(userId, ngoId, items);
+
+
+
+        return ResponseEntity.ok(
+                new OrderSuccessResponseDto("Success", "Order Created Successfully.")
+        );
+
     }
 }

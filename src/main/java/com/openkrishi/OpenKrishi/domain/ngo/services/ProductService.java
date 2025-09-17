@@ -3,31 +3,58 @@ package com.openkrishi.OpenKrishi.domain.ngo.services;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;
+import com.openkrishi.OpenKrishi.domain.ngo.dtos.OrderItemRequestDto;
 import com.openkrishi.OpenKrishi.domain.ngo.dtos.ProductUpdateDto;
-import com.openkrishi.OpenKrishi.domain.ngo.entity.Product;
+import com.openkrishi.OpenKrishi.domain.ngo.entity.*;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.DeliveryChargeRepository;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.NgoRepository;
+import com.openkrishi.OpenKrishi.domain.ngo.repository.OrderRepository;
 import com.openkrishi.OpenKrishi.domain.ngo.repository.ProductRepository;
+import com.openkrishi.OpenKrishi.domain.user.entity.Address;
+import com.openkrishi.OpenKrishi.domain.user.entity.User;
+import com.openkrishi.OpenKrishi.domain.user.repository.AddressRepository;
+import com.openkrishi.OpenKrishi.domain.user.repository.UserRepository;
+import jakarta.transaction.Transactional;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
 import java.math.BigDecimal;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 public class ProductService {
     private final ProductRepository productRepository;
     private final Cloudinary cloudinary;
+    private final UserRepository userRepository;
+    private final NgoRepository ngoRepository;
+    private final AddressRepository addressRepository;
+    private final DeliveryChargeRepository deliveryChargeRepository;
+    private final OrderRepository orderRepository;
+    private final DeliveryChargeService deliveryChargeService;
 
 
     public ProductService(
             ProductRepository productRepository,
-            Cloudinary cloudinary
+            Cloudinary cloudinary,
+            UserRepository userRepository,
+            NgoRepository ngoRepository,
+            AddressRepository addressRepository,
+            DeliveryChargeRepository deliveryChargeRepository,
+            OrderRepository orderRepository,
+            DeliveryChargeService deliveryChargeService
     ) {
         this.productRepository = productRepository;
         this.cloudinary = cloudinary;
+        this.userRepository = userRepository;
+        this.ngoRepository = ngoRepository;
+        this.addressRepository = addressRepository;
+        this.deliveryChargeRepository = deliveryChargeRepository;
+        this.orderRepository = orderRepository;
+        this.deliveryChargeService = deliveryChargeService;
     }
 
 
@@ -139,4 +166,60 @@ public class ProductService {
     {
         return productRepository.findByLocalPriceBetween(minPrice, maxPrice);
     }
+
+    // ----------------- Order Methods -----------------
+
+    @Transactional
+    public Order createOrder(UUID userId, UUID ngoId, List<OrderItemRequestDto> items) {
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+
+        Ngo ngo = ngoRepository.findById(ngoId)
+                .orElseThrow(() -> new RuntimeException("NGO not found"));
+
+
+
+        // Fetch address linked to user
+        Address address = addressRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("Address not found for user with id: " + userId));
+
+        // Distance calculation using Haversine
+        double distanceKm = DeliveryChargeService.calculateDistanceInKm(
+                user.getLatitude(), user.getLongitude(), ngo.getUser().getLatitude(), ngo.getUser().getLongitude()
+        );
+
+        BigDecimal deliveryCost = deliveryChargeService.calculateDeliveryCharge(ngo.getUser(), distanceKm);
+
+
+        List<OrderItem> orderItems = items.stream().map(itemRequest -> {
+            Product product = productRepository.findById(itemRequest.getProductId())
+                    .orElseThrow(() -> new RuntimeException("Product not found: " + itemRequest.getProductId()));
+            return OrderItem.builder()
+                    .product(product)
+                    .quantity(itemRequest.getQuantity())
+                    .build();
+        }).collect(Collectors.toList());
+
+        BigDecimal productTotal = orderItems.stream()
+                .map(oi -> oi.getProduct().getLocalPrice().multiply(BigDecimal.valueOf(oi.getQuantity())))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        BigDecimal totalPrice = productTotal.add(deliveryCost);
+
+        Order order = Order.builder()
+                .user(user)
+                .ngo(ngo)
+                .address(address)
+                .orderItems(orderItems)
+                .deliveryCharge(deliveryCost)
+                .totalPrice(totalPrice)
+                .build();
+
+        orderItems.forEach(oi -> oi.setOrder(order));
+
+        return orderRepository.save(order);
+    }
 }
+

@@ -43,5 +43,9 @@ public class Address {
     @Getter
     private String village;
 
+    @OneToOne
+    @JoinColumn(name = "user_id", nullable = true)
+    private User user;
+
 
 }

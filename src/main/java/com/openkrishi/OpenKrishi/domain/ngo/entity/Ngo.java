@@ -7,9 +7,13 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Entity
+@Getter
+@Setter
 @Table(name = "ngos")
 public class Ngo {
 
@@ -40,4 +44,9 @@ public class Ngo {
     @JoinColumn(name = "address_id", nullable = true)
     @Setter @Getter
     private Address address;
+
+    @OneToMany(mappedBy = "ngo", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<DeliveryCharge> deliveryCharges = new ArrayList<>();
+
+
 }
