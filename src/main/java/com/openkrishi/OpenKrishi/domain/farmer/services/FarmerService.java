@@ -74,4 +74,23 @@ public class FarmerService {
 
         return  farmers.stream().map(this::mapToDto).collect(Collectors.toList());
     }
+
+    //-------Search Farmer--------
+    public List<FarmerResponseDto> searchFarmersByUser(UUID userId, String keyword) {
+        // Step 1: Find NGO of the user
+        Ngo ngo = ngoRepository.findByUser_Id(userId)
+                .orElseThrow(() -> new RuntimeException("NGO not found for this user"));
+
+        // Step 2: Search farmers under this NGO by name or phone
+        List<Farmer> farmers = farmerRepository
+                .findByNgoAndFarmerNameContainingIgnoreCaseOrPhoneContaining(
+                        ngo, keyword, keyword
+                );
+
+        // Step 3: Map to DTO
+        return farmers.stream()
+                .map(this::mapToDto)
+                .collect(Collectors.toList());
+    }
+
 }

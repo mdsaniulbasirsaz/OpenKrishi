@@ -5,11 +5,13 @@ import com.openkrishi.OpenKrishi.domain.farmer.dtos.FarmerCreateRequestDto;
 import com.openkrishi.OpenKrishi.domain.farmer.dtos.FarmerResponseDto;
 import com.openkrishi.OpenKrishi.domain.farmer.entity.Farmer;
 import com.openkrishi.OpenKrishi.domain.farmer.services.FarmerService;
+import io.jsonwebtoken.Jwt;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -105,5 +107,64 @@ public class FarmerController {
                     .body("Unexpected error occurred: " + ex.getMessage());
         }
     }
+
+
+    //-------Farmer Search using Name or Phone---------
+    @Operation(
+            summary = "Search Farmers by Name or Phone under logged-in user's NGO",
+            description = "This API allows searching farmers by their `name` or `phone number` within the logged-in user's NGO.\n\n" +
+                    "Flow:\n" +
+                    "1. The system extracts the `userId` from the JWT provided in the `Authorization` header.\n" +
+                    "2. It finds the NGO linked to that `userId`.\n" +
+                    "3. Searches all farmers under that NGO where the `farmerName` or `phone` matches the given keyword.\n" +
+                    "4. Returns the matching farmers in a list.\n\n" +
+                    "Requirements:\n" +
+                    "- `Authorization` header with Bearer JWT token must be provided.\n" +
+                    "- JWT should contain the `userId` of the NGO owner.\n" +
+                    "- Search keyword is passed as query parameter `keyword`.\n" +
+                    "- The search is **case-insensitive** and supports **partial matches**.\n\n" +
+                    "Response Codes:\n" +
+                    "- `200 OK`: Farmers matching the keyword retrieved successfully.\n" +
+                    "- `404 Not Found`: No farmers found matching the keyword under this NGO.\n" +
+                    "- `403 Forbidden`: Authorization token missing, invalid, or expired.\n" +
+                    "- `500 Internal Server Error`: Unexpected server error occurred."
+    )
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = "Farmers retrieved successfully"),
+            @ApiResponse(responseCode = "404", description = "No farmers found under this NGO with the given keyword"),
+            @ApiResponse(responseCode = "403", description = "Invalid or missing JWT token"),
+            @ApiResponse(responseCode = "500", description = "Unexpected internal server error")
+    })
+    @GetMapping("/search")
+    public ResponseEntity<?> searchFarmers(
+            @RequestParam String keyword,
+            @RequestHeader("Authorization") String authorizationHeader
+    ) {
+        try {
+            if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN).body("Authorization token missing or invalid");
+            }
+
+            String token = authorizationHeader.substring(7); // Remove "Bearer " prefix
+            UUID userId = jwtService.extractUserId(token);
+
+            List<FarmerResponseDto> farmers = farmerService.searchFarmersByUser(userId, keyword);
+
+            if (farmers.isEmpty()) {
+                return ResponseEntity
+                        .status(HttpStatus.NOT_FOUND)
+                        .body("No farmers found with keyword: " + keyword);
+            }
+
+            return ResponseEntity.ok(farmers);
+
+        } catch (Exception ex) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Unexpected error occurred: " + ex.getMessage());
+        }
+    }
+
+
 
 }
